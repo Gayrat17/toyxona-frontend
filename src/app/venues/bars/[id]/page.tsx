@@ -62,7 +62,7 @@ export default function BarDetailPage({ params }: PageProps) {
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 font-black text-xl text-indigo-600 dark:text-indigo-400">
             <Sparkles className="h-6 w-6" />
-            <span>TOYXO&apos;NA</span>
+            <span>TO&apos;YXONA</span>
           </Link>
 
           {/* User actions */}

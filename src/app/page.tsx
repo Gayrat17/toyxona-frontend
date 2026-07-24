@@ -66,7 +66,7 @@ export default function Home() {
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 font-black text-xl text-indigo-600 dark:text-indigo-400">
             <Sparkles className="h-6 w-6" />
-            <span>TOYXO&apos;NA</span>
+            <span>TO&apos;YXONA</span>
           </Link>
 
           {/* Navigation links (Tabs) */}
@@ -125,10 +125,10 @@ export default function Home() {
         <div className="absolute inset-0 opacity-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-300 via-slate-900 to-slate-950" />
         <div className="mx-auto max-w-4xl px-4 text-center relative z-10">
           <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl">
-            Tadbiringiz uchun mukammal joy
+            Tadbiringiz uchun mukammal va orzudagi joy
           </h1>
-          <p className="mx-auto mt-4 max-w-xl text-lg text-slate-300">
-            To&apos;yxonalarni smena bo&apos;yicha va barlarni soatbay oson qidirib toping, band qiling hamda tadbirlaringizni professional tashkillashtiring.
+          <p className="mx-auto mt-4 max-w-2xl text-lg text-slate-300">
+            To&apos;yxonalarni smena bo&apos;yicha va barlarni soatbay oson qidirib toping, joylarni band qiling hamda barcha tadbirlaringizni yuqori saviyada tashkillashtiring.
           </p>
         </div>
       </section>
