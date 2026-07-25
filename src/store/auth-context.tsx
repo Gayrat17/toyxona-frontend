@@ -81,7 +81,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const register = async (phone_number: string, first_name: string, password: string, role: string) => {
     setLoading(true);
     try {
-      await registerRequest({ phone_number, first_name, password, role });
+      await registerRequest({ phone_number, first_name, password, re_password: password, role });
       // Log in automatically after registration
       await login(phone_number, password);
     } catch (err) {

@@ -2,9 +2,21 @@ import React from 'react';
 import { WeddingHall, Bar } from '@/types';
 import Link from 'next/link';
 import { MapPin, Users, DollarSign, Hotel, Wine } from 'lucide-react';
+import { getMediaUrl } from '@/utils/media';
 
 interface VenueCardProps {
   venue: WeddingHall | Bar;
+}
+
+function getVenueCover(venue: WeddingHall | Bar): string | null {
+  if (venue.cover_image_url) return getMediaUrl(venue.cover_image_url);
+  if (venue.cover_image) return getMediaUrl(venue.cover_image);
+  if (venue.gallery_images && venue.gallery_images.length > 0) {
+    const first = venue.gallery_images[0];
+    const url = first.image_url || first.image;
+    if (url) return getMediaUrl(url);
+  }
+  return null;
 }
 
 export const VenueCard: React.FC<VenueCardProps> = ({ venue }) => {
@@ -13,6 +25,7 @@ export const VenueCard: React.FC<VenueCardProps> = ({ venue }) => {
   const name = venue.name;
   const address = venue.address;
   const capacity = isHall ? (venue as WeddingHall).max_capacity : (venue as Bar).capacity;
+  const coverUrl = getVenueCover(venue);
   
   // Format prices cleanly
   const depositFormatted = isHall 
@@ -31,18 +44,30 @@ export const VenueCard: React.FC<VenueCardProps> = ({ venue }) => {
     >
       {/* Venue Image / Placeholder Gradient */}
       <div className="relative flex h-48 w-full items-center justify-center overflow-hidden bg-slate-100 dark:bg-slate-900">
-        <div className={`absolute inset-0 opacity-40 transition-transform duration-500 group-hover:scale-105 bg-gradient-to-br ${
-          isHall ? 'from-teal-400 via-emerald-500 to-indigo-600' : 'from-purple-500 via-indigo-600 to-pink-500'
-        }`} />
-        
-        {/* Centered Graphic representation */}
-        <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl bg-white/90 shadow-sm backdrop-blur-sm dark:bg-slate-900/90">
-          {isHall ? (
-            <Hotel className="h-8 w-8 text-emerald-600 dark:text-emerald-400" />
-          ) : (
-            <Wine className="h-8 w-8 text-indigo-600 dark:text-indigo-400" />
-          )}
-        </div>
+        {coverUrl ? (
+          <>
+            <img 
+              src={coverUrl} 
+              alt={name} 
+              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" 
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-900/70 via-transparent to-transparent" />
+          </>
+        ) : (
+          <>
+            <div className={`absolute inset-0 opacity-40 transition-transform duration-500 group-hover:scale-105 bg-gradient-to-br ${
+              isHall ? 'from-teal-400 via-emerald-500 to-indigo-600' : 'from-purple-500 via-indigo-600 to-pink-500'
+            }`} />
+            
+            <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl bg-white/90 shadow-sm backdrop-blur-sm dark:bg-slate-900/90">
+              {isHall ? (
+                <Hotel className="h-8 w-8 text-emerald-600 dark:text-emerald-400" />
+              ) : (
+                <Wine className="h-8 w-8 text-indigo-600 dark:text-indigo-400" />
+              )}
+            </div>
+          </>
+        )}
 
         {/* Category Badge */}
         <div className={`absolute top-4 right-4 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wider text-white shadow-sm ${

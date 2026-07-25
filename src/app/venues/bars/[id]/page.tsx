@@ -69,10 +69,36 @@ export default function BarDetailPage({ params }: PageProps) {
           <div className="flex items-center gap-4">
             {user ? (
               <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200">
-                  <UserIcon className="h-4 w-4 text-slate-400" />
+                <Link
+                  href={
+                    user.role === 'ADMIN'
+                      ? '/admin/dashboard'
+                      : user.role === 'VENUE_OWNER'
+                      ? '/dashboard/venues'
+                      : '/'
+                  }
+                  className="flex items-center gap-2 rounded-xl bg-slate-100 dark:bg-slate-800 px-3 py-1.5 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-indigo-50 hover:text-indigo-600 dark:hover:bg-slate-800/80 dark:hover:text-indigo-400 transition-colors shadow-sm cursor-pointer"
+                  title={
+                    user.role === 'ADMIN'
+                      ? "Superadmin paneliga o'tish"
+                      : user.role === 'VENUE_OWNER'
+                      ? "Joy egasi boshqaruv paneliga o'tish"
+                      : "Bosh sahifa"
+                  }
+                >
+                  <UserIcon className="h-4 w-4 text-indigo-500" />
                   <span>{user.first_name || 'Foydalanuvchi'}</span>
-                </div>
+                  {user.role === 'VENUE_OWNER' && (
+                    <span className="rounded border border-indigo-200 bg-indigo-50 px-1.5 py-0.5 text-[10px] font-bold uppercase text-indigo-600 dark:border-indigo-800 dark:bg-indigo-950 dark:text-indigo-300">
+                      Joy egasi
+                    </span>
+                  )}
+                  {user.role === 'ADMIN' && (
+                    <span className="rounded border border-rose-200 bg-rose-50 px-1.5 py-0.5 text-[10px] font-bold uppercase text-rose-600 dark:border-rose-800 dark:bg-rose-950 dark:text-rose-300">
+                      Admin
+                    </span>
+                  )}
+                </Link>
                 <button
                   onClick={logout}
                   className="rounded-full p-2 text-slate-500 hover:bg-slate-100 hover:text-rose-600 dark:hover:bg-slate-900"

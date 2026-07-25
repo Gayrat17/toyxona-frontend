@@ -4,9 +4,6 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api/v1
 
 export const api = axios.create({
   baseURL: API_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
 });
 
 // Helper to get access token from localStorage (safe for SSR)
@@ -60,12 +57,7 @@ const processQueue = (error: any, token: string | null = null) => {
 
 // Response Interceptor: Catch 401 errors, refresh token, and retry request
 api.interceptors.response.use(
-  (response) => {
-    if (response.data && typeof response.data === 'object' && 'results' in response.data && Array.isArray(response.data.results)) {
-      response.data = response.data.results;
-    }
-    return response;
-  },
+  (response) => response,
   async (error) => {
     const originalRequest = error.config;
 

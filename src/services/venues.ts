@@ -1,11 +1,21 @@
 import { api } from './api';
-import { WeddingHall, Bar, Shift, Package, Decoration } from '@/types';
+import { WeddingHall, Bar, Shift, Package, Decoration, PaginatedResponse } from '@/types';
 
 /**
- * Fetches all wedding halls from the backend.
+ * Fetches wedding halls from backend with pagination support.
  */
-export const fetchHallsRequest = async (): Promise<WeddingHall[]> => {
-  const response = await api.get('/venues/halls/');
+export const fetchHallsRequest = async (page: number = 1, my_venues?: boolean): Promise<PaginatedResponse<WeddingHall>> => {
+  const params: any = { page };
+  if (my_venues) params.my_venues = true;
+  const response = await api.get('/venues/halls/', { params });
+  if (Array.isArray(response.data)) {
+    return {
+      count: response.data.length,
+      next: null,
+      previous: null,
+      results: response.data,
+    };
+  }
   return response.data;
 };
 
@@ -18,10 +28,20 @@ export const fetchHallByIdRequest = async (id: number): Promise<WeddingHall> => 
 };
 
 /**
- * Fetches all bars from the backend.
+ * Fetches bars from backend with pagination support.
  */
-export const fetchBarsRequest = async (): Promise<Bar[]> => {
-  const response = await api.get('/venues/bars/');
+export const fetchBarsRequest = async (page: number = 1, my_venues?: boolean): Promise<PaginatedResponse<Bar>> => {
+  const params: any = { page };
+  if (my_venues) params.my_venues = true;
+  const response = await api.get('/venues/bars/', { params });
+  if (Array.isArray(response.data)) {
+    return {
+      count: response.data.length,
+      next: null,
+      previous: null,
+      results: response.data,
+    };
+  }
   return response.data;
 };
 
@@ -58,31 +78,25 @@ export const fetchDecorationsRequest = async (): Promise<Decoration[]> => {
 };
 
 /**
- * Creates a new Wedding Hall.
+ * Creates a new Wedding Hall (supports JSON or FormData for media uploads).
  */
-export const createHallRequest = async (data: {
-  name: string;
-  address: string;
-  description: string;
-  max_capacity: number;
-  required_deposit: string;
-}): Promise<WeddingHall> => {
+export const createHallRequest = async (data: FormData | any): Promise<WeddingHall> => {
   const response = await api.post('/venues/halls/', data);
   return response.data;
 };
 
-/**
- * Creates a new Bar.
- */
-export const createBarRequest = async (data: {
-  name: string;
-  address: string;
-  description: string;
-  capacity: number;
-  price_per_hour: string;
-  required_deposit: string;
-}): Promise<Bar> => {
+export const createBarRequest = async (data: FormData | any): Promise<Bar> => {
   const response = await api.post('/venues/bars/', data);
+  return response.data;
+};
+
+export const updateHallRequest = async (id: number, data: FormData | any): Promise<WeddingHall> => {
+  const response = await api.patch(`/venues/halls/${id}/`, data);
+  return response.data;
+};
+
+export const updateBarRequest = async (id: number, data: FormData | any): Promise<Bar> => {
+  const response = await api.patch(`/venues/bars/${id}/`, data);
   return response.data;
 };
 

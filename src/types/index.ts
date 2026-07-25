@@ -14,6 +14,24 @@ export interface User {
   date_joined: string;
 }
 
+export interface PaginatedResponse<T> {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: T[];
+}
+
+export interface VenueImage {
+  id: number;
+  image?: string;
+  file?: string;
+  image_url: string;
+  type?: string;
+  is_main?: boolean;
+  position?: number;
+  created_at: string;
+}
+
 export interface WeddingHall {
   id: number;
   owner: number;
@@ -23,6 +41,12 @@ export interface WeddingHall {
   description: string;
   max_capacity: number;
   required_deposit: string; // Decimals are serialized as strings in JSON API responses
+  cover_image?: string | null;
+  cover_image_url?: string | null;
+  video_url?: string | null;
+  map_link?: string | null;
+  amenities?: string[];
+  gallery_images?: VenueImage[];
   created_at: string;
 }
 
@@ -36,6 +60,12 @@ export interface Bar {
   capacity: number;
   price_per_hour: string; // Decimal representation
   required_deposit: string; // Decimal representation
+  cover_image?: string | null;
+  cover_image_url?: string | null;
+  video_url?: string | null;
+  map_link?: string | null;
+  amenities?: string[];
+  gallery_images?: VenueImage[];
   created_at: string;
 }
 
@@ -103,20 +133,16 @@ export interface BarBooking extends BaseBooking {
   guest_count?: number | null;
 }
 
-// Union type to represent any booking
 export type Booking = HallBooking | BarBooking;
 
-// Helper to determine if a booking is a Wedding Hall booking
 export function isHallBooking(booking: Booking): booking is HallBooking {
   return (booking as HallBooking).hall !== undefined;
 }
 
-// Helper to determine if a booking is a Bar booking
 export function isBarBooking(booking: Booking): booking is BarBooking {
   return (booking as BarBooking).bar !== undefined;
 }
 
-// Taqvim API interfeyslari
 export interface BusyShift {
   date: string;
   shift_id: number;

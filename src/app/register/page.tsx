@@ -27,11 +27,18 @@ export default function RegisterPage() {
     } catch (err: any) {
       console.error(err);
       if (err.response?.data?.phone_number) {
-        setError("Ushbu telefon raqami allaqachon ro'yxatdan o'tgan.");
+        const msg = Array.isArray(err.response.data.phone_number) ? err.response.data.phone_number[0] : err.response.data.phone_number;
+        setError(msg.includes("exists") || msg.includes("already") || msg.includes("mavjud") ? "Ushbu telefon raqami allaqachon ro'yxatdan o'tgan." : msg);
       } else if (err.response?.data?.password) {
-        setError(err.response.data.password[0]);
+        setError(Array.isArray(err.response.data.password) ? err.response.data.password[0] : err.response.data.password);
+      } else if (err.response?.data?.re_password) {
+        setError(Array.isArray(err.response.data.re_password) ? err.response.data.re_password[0] : err.response.data.re_password);
       } else if (err.response?.data?.detail) {
         setError(err.response.data.detail);
+      } else if (err.response?.data && typeof err.response.data === 'object') {
+        const firstKey = Object.keys(err.response.data)[0];
+        const val = err.response.data[firstKey];
+        setError(`${firstKey}: ${Array.isArray(val) ? val[0] : val}`);
       } else {
         setError("Ro'yxatdan o'tishda xatolik yuz berdi. Iltimos qaytadan urining.");
       }
