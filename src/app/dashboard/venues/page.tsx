@@ -84,7 +84,7 @@ function OwnerVenuesContent() {
             }`}
           >
             <Hotel className="h-4 w-4" />
-            <span>To&apos;yxonalar</span>
+            <span>Restoranlar</span>
           </button>
 
           <button
@@ -139,7 +139,7 @@ function OwnerVenuesContent() {
             Hozircha hech narsa topilmadi
           </h3>
           <p className="mt-1 text-sm text-slate-400 max-w-md">
-            Sizda hali {activeTab === 'halls' ? "to'yxonalar" : "barlar"} ro&apos;yxati yaratilmagan.
+            Sizda hali {activeTab === 'halls' ? "restoranlar" : "barlar"} ro&apos;yxati yaratilmagan.
           </p>
           <Link
             href="/dashboard/add"
@@ -183,7 +183,7 @@ function OwnerVenuesContent() {
                     <div className="p-6">
                       <div className="flex justify-between items-start">
                         <span className="inline-flex items-center gap-1 rounded-md bg-indigo-50 dark:bg-indigo-950 px-2.5 py-1 text-xs font-bold text-indigo-600 dark:text-indigo-400">
-                          <Hotel className="h-3.5 w-3.5" /> To&apos;yxona
+                          <Hotel className="h-3.5 w-3.5" /> Restoran
                         </span>
                         <span className="text-xs font-semibold text-slate-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 flex items-center gap-1 transition-colors">
                           Batafsil <ArrowRight className="h-3.5 w-3.5" />

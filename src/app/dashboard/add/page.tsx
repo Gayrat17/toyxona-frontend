@@ -194,7 +194,7 @@ export default function AddVenuePage() {
           Yangi Joy Qo&apos;shish
         </h1>
         <p className="mt-1 text-sm text-slate-500">
-          Platformaga to&apos;yxonangiz yoki baringiz haqida to&apos;liq va jozibador ma&apos;lumotlarni kiriting.
+          Platformaga restoraningiz yoki baringiz haqida to&apos;liq va jozibador ma&apos;lumotlarni kiriting.
         </p>
       </div>
 
@@ -241,7 +241,7 @@ export default function AddVenuePage() {
                 }`}
               >
                 <Hotel className="h-6 w-6" />
-                <span className="text-sm font-bold">To&apos;yxona (Wedding Hall)</span>
+                <span className="text-sm font-bold">Restoran (Wedding Hall)</span>
               </button>
 
               <button

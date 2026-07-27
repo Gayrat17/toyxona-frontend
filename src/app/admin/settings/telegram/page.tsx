@@ -229,7 +229,7 @@ export default function TelegramBotSettingsPage() {
                       type="text"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      placeholder="To'yxona Admin Bot"
+                      placeholder="Restoran Admin Bot"
                       className="block w-full rounded-xl border border-slate-200 bg-transparent py-3 px-4 text-sm text-slate-800 placeholder-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-800 dark:text-slate-100"
                       required
                     />

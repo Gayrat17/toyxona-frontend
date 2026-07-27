@@ -52,12 +52,50 @@ export const BarBookingForm: React.FC<BarBookingFormProps> = ({ bar }) => {
     }
   }, [startTime, endTime, bar.price_per_hour]);
 
+  // Today's date formatted as YYYY-MM-DD to restrict past date selections
   const getTodayString = () => {
     const today = new Date();
     const yyyy = today.getFullYear();
     const mm = String(today.getMonth() + 1).padStart(2, '0');
     const dd = String(today.getDate()).padStart(2, '0');
     return `${yyyy}-${mm}-${dd}`;
+  };
+
+  const getQuickDate = (type: 'today' | 'tomorrow' | 'saturday' | 'sunday') => {
+    const d = new Date();
+    if (type === 'tomorrow') {
+      d.setDate(d.getDate() + 1);
+    } else if (type === 'saturday') {
+      const day = d.getDay();
+      const diff = (6 - day + 7) % 7 || 7;
+      d.setDate(d.getDate() + diff);
+    } else if (type === 'sunday') {
+      const day = d.getDay();
+      const diff = (0 - day + 7) % 7 || 7;
+      d.setDate(d.getDate() + diff);
+    }
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  };
+
+  const formatSelectedDateUz = (dateStr: string) => {
+    if (!dateStr) return '';
+    const parts = dateStr.split('-');
+    if (parts.length !== 3) return dateStr;
+    const year = parseInt(parts[0]);
+    const monthIdx = parseInt(parts[1]) - 1;
+    const day = parseInt(parts[2]);
+
+    const monthsUz = [
+      'Yanvar', 'Fevral', 'Mart', 'Aprel', 'May', 'Iyun',
+      'Iyul', 'Avgust', 'Sentabr', 'Oktabr', 'Noyabr', 'Dekabr'
+    ];
+    const d = new Date(year, monthIdx, day);
+    const weekDaysUz = ['Yakshanba', 'Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba'];
+
+    return `${day}-${monthsUz[monthIdx]} ${year}, ${weekDaysUz[d.getDay()]}`;
   };
 
   const handleBooking = async (e: React.FormEvent) => {
@@ -133,20 +171,72 @@ export const BarBookingForm: React.FC<BarBookingFormProps> = ({ bar }) => {
         )}
 
         {/* 1. Date Picker */}
-        <div className="mt-5">
-          <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400">
-            1. Sanani tanlang
-          </label>
-          <div className="relative mt-2">
-            <Calendar className="absolute top-3 left-3 h-5 w-5 text-slate-400" />
+        <div className="mt-5 space-y-3">
+          <div className="flex items-center justify-between">
+            <label className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-200">
+              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-600 text-[11px] font-bold text-white shadow-sm">
+                1
+              </span>
+              <span>Sanani tanlang</span>
+            </label>
+
+            {date && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                <CheckCircle className="h-3 w-3" /> Tanlandi
+              </span>
+            )}
+          </div>
+
+          <div className="relative group">
+            <div className="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-indigo-600 dark:text-indigo-400">
+              <Calendar className="h-5 w-5" />
+            </div>
             <input
               type="date"
               min={getTodayString()}
               required
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              className="block w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-3 text-slate-800 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 sm:text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+              className="block w-full rounded-2xl border border-slate-200 bg-slate-50/80 py-3 pl-11 pr-4 text-sm font-semibold text-slate-800 transition-all duration-200 hover:border-indigo-300 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-indigo-500/10 dark:border-slate-700/80 dark:bg-slate-800/80 dark:text-white dark:hover:border-indigo-700 dark:focus:border-indigo-500 dark:focus:bg-slate-900"
             />
+          </div>
+
+          {/* Formatted Date Uzbek Preview Banner */}
+          {date && (
+            <div className="flex items-center justify-between rounded-xl bg-indigo-50/70 dark:bg-indigo-950/40 p-3 border border-indigo-100 dark:border-indigo-900/50 text-xs text-indigo-900 dark:text-indigo-200 transition-all">
+              <span className="font-semibold text-slate-500 dark:text-slate-400">Tanlangan sana:</span>
+              <span className="font-extrabold text-indigo-600 dark:text-indigo-300 text-sm">{formatSelectedDateUz(date)}</span>
+            </div>
+          )}
+
+          {/* Quick Date Select Presets */}
+          <div>
+            <span className="text-[11px] font-semibold text-slate-400 block mb-1.5">Tezkor tanlov:</span>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+              {[
+                { label: 'Bugun', key: 'today' as const },
+                { label: 'Ertaga', key: 'tomorrow' as const },
+                { label: 'Kelasi Shanba', key: 'saturday' as const },
+                { label: 'Kelasi Yakshanba', key: 'sunday' as const },
+              ].map((preset) => {
+                const targetDate = getQuickDate(preset.key);
+                const isSelected = date === targetDate;
+                return (
+                  <button
+                    key={preset.key}
+                    type="button"
+                    onClick={() => setDate(targetDate)}
+                    className={`rounded-xl py-2 px-2.5 text-xs font-bold transition-all duration-150 border ${
+                      isSelected
+                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-600/20'
+                        : 'bg-slate-100/80 text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 dark:bg-slate-800/80 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-indigo-400 border-slate-200/60 dark:border-slate-700/60'
+                    }`}
+                  >
+                    {preset.label}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
 

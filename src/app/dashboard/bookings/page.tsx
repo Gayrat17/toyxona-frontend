@@ -37,7 +37,7 @@ export default function OwnerBookingsPage() {
       
       {/* Hall Bookings table */}
       <div>
-        <h3 className="text-base font-bold text-slate-800 dark:text-white mb-4">To&apos;yxonaga olingan bronlar ({hallBookings.length})</h3>
+        <h3 className="text-base font-bold text-slate-800 dark:text-white mb-4">Restoranga olingan bronlar ({hallBookings.length})</h3>
         {hallBookings.length > 0 ? (
           <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
             <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-800 text-left text-sm text-slate-500 dark:text-slate-400">
@@ -104,7 +104,7 @@ export default function OwnerBookingsPage() {
             </table>
           </div>
         ) : (
-          <p className="text-sm text-slate-400 italic">To&apos;yxonaga kelib tushgan bronlar yo&apos;q.</p>
+          <p className="text-sm text-slate-400 italic">Restoranga kelib tushgan bronlar yo&apos;q.</p>
         )}
       </div>
 

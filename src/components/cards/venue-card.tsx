@@ -73,7 +73,7 @@ export const VenueCard: React.FC<VenueCardProps> = ({ venue }) => {
         <div className={`absolute top-4 right-4 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wider text-white shadow-sm ${
           isHall ? 'bg-emerald-600/90' : 'bg-indigo-600/90'
         }`}>
-          {isHall ? "To'yxona" : "Bar"}
+          {isHall ? "Restoran" : "Bar"}
         </div>
       </div>
 

@@ -44,7 +44,7 @@ const AMENITIES_LIST = [
 ];
 
 const hallEditSchema = z.object({
-  name: z.string().min(3, "To'yxona nomi kamida 3 ta belgidan iborat bo'lishi kerak"),
+  name: z.string().min(3, "Restoran nomi kamida 3 ta belgidan iborat bo'lishi kerak"),
   description: z.string().min(10, "Tavsif kamida 10 ta belgidan iborat bo'lishi kerak"),
   region: z.string().min(1, "Viloyatni tanlang"),
   district: z.string().min(1, "Tumanni tanlang"),
@@ -294,7 +294,7 @@ export default function WeddingHallEditPage() {
     return (
       <div className="max-w-5xl mx-auto space-y-6">
         <ErrorAlert 
-          message={fetchError instanceof Error ? fetchError.message : "To'yxona ma'lumotlarini yuklashda xatolik yuz berdi."} 
+          message={fetchError instanceof Error ? fetchError.message : "Restoran ma'lumotlarini yuklashda xatolik yuz berdi."} 
         />
         <Link 
           href="/dashboard/venues"
@@ -315,7 +315,7 @@ export default function WeddingHallEditPage() {
           <div className="flex items-center gap-2 text-xs font-semibold text-slate-400 mb-2">
             <Link href="/dashboard/venues" className="hover:text-indigo-600 transition-colors">Joylar ro&apos;yxati</Link>
             <span>/</span>
-            <span className="text-slate-700 dark:text-slate-200">To&apos;yxonani tahrirlash</span>
+            <span className="text-slate-700 dark:text-slate-200">Restoranni tahrirlash</span>
           </div>
           <h1 className="text-2xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
             <Hotel className="h-7 w-7 text-indigo-600" />
@@ -341,7 +341,7 @@ export default function WeddingHallEditPage() {
           </div>
           <div>
             <p className="text-sm font-bold">Muvaffaqiyatli saqlandi!</p>
-            <p className="text-xs opacity-90">To&apos;yxona ma&apos;lumotlari va rasmlari bazaga muvaffaqiyatli saqlandi.</p>
+            <p className="text-xs opacity-90">Restoran ma&apos;lumotlari va rasmlari bazaga muvaffaqiyatli saqlandi.</p>
           </div>
         </div>
       )}
@@ -357,13 +357,13 @@ export default function WeddingHallEditPage() {
             </div>
             <div>
               <h3 className="text-base font-bold text-slate-800 dark:text-white">1. Asosiy Ma&apos;lumotlar</h3>
-              <p className="text-xs text-slate-400">To&apos;yxonaning nomi, sig&apos;imi va umumiy tavsifini o&apos;zgartiring</p>
+              <p className="text-xs text-slate-400">Restoranning nomi, sig&apos;imi va umumiy tavsifini o&apos;zgartiring</p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">To&apos;yxona Nomi *</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Restoran Nomi *</label>
               <input
                 type="text"
                 {...register('name')}
@@ -591,7 +591,7 @@ export default function WeddingHallEditPage() {
             </div>
             <div>
               <h3 className="text-base font-bold text-slate-800 dark:text-white">5. Qo&apos;shimcha Qulayliklar</h3>
-              <p className="text-xs text-slate-400">To&apos;yxonadagi yaratilgan imkoniyatlarni tanlang</p>
+              <p className="text-xs text-slate-400">Restorandagi yaratilgan imkoniyatlarni tanlang</p>
             </div>
           </div>
 

@@ -1,11 +1,35 @@
 import { api } from './api';
-import { WeddingHall, Bar, Shift, Package, Decoration, PaginatedResponse } from '@/types';
+import { WeddingHall, Bar, Shift, Package, Decoration, PaginatedResponse, Region } from '@/types';
 
 /**
- * Fetches wedding halls from backend with pagination support.
+ * Fetches all regions with nested districts from database.
  */
-export const fetchHallsRequest = async (page: number = 1, my_venues?: boolean): Promise<PaginatedResponse<WeddingHall>> => {
-  const params: any = { page };
+export const fetchRegionsRequest = async (): Promise<Region[]> => {
+  const response = await api.get('/venues/regions/');
+  if (response.data && response.data.results) {
+    return response.data.results;
+  }
+  return Array.isArray(response.data) ? response.data : [];
+};
+
+export interface VenueFilterParams {
+  page?: number;
+  my_venues?: boolean;
+  region?: string | number;
+  district?: string | number;
+  search?: string;
+  min_capacity?: number;
+}
+
+/**
+ * Fetches wedding halls from backend with pagination and filter support.
+ */
+export const fetchHallsRequest = async (
+  page: number = 1,
+  my_venues?: boolean,
+  filters?: VenueFilterParams
+): Promise<PaginatedResponse<WeddingHall>> => {
+  const params: any = { page, ...filters };
   if (my_venues) params.my_venues = true;
   const response = await api.get('/venues/halls/', { params });
   if (Array.isArray(response.data)) {
@@ -28,10 +52,14 @@ export const fetchHallByIdRequest = async (id: number): Promise<WeddingHall> => 
 };
 
 /**
- * Fetches bars from backend with pagination support.
+ * Fetches bars from backend with pagination and filter support.
  */
-export const fetchBarsRequest = async (page: number = 1, my_venues?: boolean): Promise<PaginatedResponse<Bar>> => {
-  const params: any = { page };
+export const fetchBarsRequest = async (
+  page: number = 1,
+  my_venues?: boolean,
+  filters?: VenueFilterParams
+): Promise<PaginatedResponse<Bar>> => {
+  const params: any = { page, ...filters };
   if (my_venues) params.my_venues = true;
   const response = await api.get('/venues/bars/', { params });
   if (Array.isArray(response.data)) {

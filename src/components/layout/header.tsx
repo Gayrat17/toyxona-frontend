@@ -4,12 +4,38 @@ import React from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/store/auth-context';
-import { Sparkles, Hotel, Wine, LayoutGrid, User as UserIcon, LogOut, LogIn } from 'lucide-react';
+import { Sparkles, Hotel, Wine, LayoutGrid, User as UserIcon, LogOut, LogIn, Sun, Moon } from 'lucide-react';
 
 export function Header() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, logout } = useAuth();
+  const [isDark, setIsDark] = React.useState(false);
+
+  React.useEffect(() => {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+      setIsDark(true);
+    } else {
+      document.documentElement.classList.remove('dark');
+      setIsDark(false);
+    }
+  }, []);
+
+  const toggleTheme = () => {
+    const root = document.documentElement;
+    const currentlyDark = root.classList.contains('dark');
+    if (currentlyDark) {
+      root.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+      setIsDark(false);
+    } else {
+      root.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+      setIsDark(true);
+    }
+  };
 
   const currentCategory = searchParams.get('category') || 'all';
 
@@ -21,7 +47,7 @@ export function Header() {
 
   const navItems = [
     { id: 'all', label: 'Barchasi', icon: LayoutGrid },
-    { id: 'halls', label: "To'yxonalar", icon: Hotel },
+    { id: 'halls', label: "Restoranlar", icon: Hotel },
     { id: 'bars', label: 'Barlar', icon: Wine },
   ];
 
@@ -32,7 +58,7 @@ export function Header() {
         {/* Brand Logo */}
         <Link href="/" className="flex items-center gap-2 font-black text-xl text-indigo-600 dark:text-indigo-400 tracking-wider">
           <Sparkles className="h-6 w-6 text-indigo-500" />
-          <span>TO&apos;YXONA</span>
+          <span>RESTORAN</span>
         </Link>
 
         {/* Global Category Navigation Switcher */}
@@ -63,8 +89,18 @@ export function Header() {
           })}
         </nav>
 
-        {/* User Auth Profile Trigger */}
-        <div className="flex items-center gap-4">
+        {/* User Auth Profile & Theme Switcher */}
+        <div className="flex items-center gap-3">
+          {/* Theme Toggle Button */}
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className="flex items-center justify-center rounded-xl p-2 text-slate-500 hover:bg-slate-100 hover:text-indigo-600 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-amber-400 transition-colors"
+            title={isDark ? "Yorug' mavzuga o'tish" : "Qorong'u mavzuga o'tish"}
+          >
+            {isDark ? <Sun className="h-5 w-5 text-amber-400" /> : <Moon className="h-5 w-5 text-slate-600" />}
+          </button>
+
           {user ? (
             <div className="flex items-center gap-3">
               <Link

@@ -32,10 +32,28 @@ export interface VenueImage {
   created_at: string;
 }
 
+export interface District {
+  id: number;
+  region: number;
+  name: string;
+  order?: number;
+}
+
+export interface Region {
+  id: number;
+  name: string;
+  order?: number;
+  districts?: District[];
+}
+
 export interface WeddingHall {
   id: number;
   owner: number;
   owner_phone?: string;
+  region?: number | null;
+  region_name?: string | null;
+  district?: number | null;
+  district_name?: string | null;
   name: string;
   address: string;
   description: string;
@@ -54,6 +72,10 @@ export interface Bar {
   id: number;
   owner: number;
   owner_phone?: string;
+  region?: number | null;
+  region_name?: string | null;
+  district?: number | null;
+  district_name?: string | null;
   name: string;
   address: string;
   description: string;

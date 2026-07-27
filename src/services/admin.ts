@@ -108,9 +108,9 @@ export const fetchAdminHallsRequest = async (): Promise<AdminWeddingHall[]> => {
         {
           id: 1,
           owner: 2,
-          name: "Yulduz To'yxonasi",
+          name: "Yulduz Restorani",
           address: "Toshkent sh., Chilonzor tumani",
-          description: "Maksimal qulayliklarga ega hashamatli to'y zali",
+          description: "Maksimal qulayliklarga ega hashamatli restoran zali",
           max_capacity: 500,
           required_deposit: "5000000.00",
           created_at: "2026-05-01T10:00:00Z",
@@ -192,10 +192,10 @@ export interface TelegramBotConfig {
 
 let localBotConfigState: TelegramBotConfig = {
   bot_token: "654321...cba9",
-  bot_username: "ToyxonaAdminBot",
-  bot_name: "To'yxona Admin Bot",
+  bot_username: "RestoranAdminBot",
+  bot_name: "Restoran Admin Bot",
   short_description: "Hisobni ulanish va bronlarni qabul qilish",
-  description: "Bu bot orqali to'yxona va bar egalari bron so'rovlarini qabul qila oladilar.",
+  description: "Bu bot orqali restoran va bar egalari bron so'rovlarini qabul qila oladilar.",
   webhook_url: "https://toyxona.uz/api/v1/notifications/webhook/",
   is_active: true,
   updated_at: "2026-07-16T13:47:00Z"
@@ -222,7 +222,7 @@ export const updateBotConfigRequest = async (
     localBotConfigState = {
       ...localBotConfigState,
       ...data,
-      bot_username: data.bot_token ? "ToyxonaAdminBot" : localBotConfigState.bot_username,
+      bot_username: data.bot_token ? "RestoranAdminBot" : localBotConfigState.bot_username,
       is_active: data.bot_token ? true : localBotConfigState.is_active,
       updated_at: new Date().toISOString()
     };

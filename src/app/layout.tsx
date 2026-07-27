@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Toyxona va Bar Bron qilish Tizimi",
+  title: "Restoran va Bar Bron qilish Tizimi",
   description: "Wedding Hall and Bar booking marketplace app",
 };
 

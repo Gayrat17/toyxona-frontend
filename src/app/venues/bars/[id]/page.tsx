@@ -62,7 +62,7 @@ export default function BarDetailPage({ params }: PageProps) {
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 font-black text-xl text-indigo-600 dark:text-indigo-400">
             <Sparkles className="h-6 w-6" />
-            <span>TO&apos;YXONA</span>
+            <span>RESTORAN</span>
           </Link>
 
           {/* User actions */}
@@ -215,7 +215,7 @@ export default function BarDetailPage({ params }: PageProps) {
       {/* Footer bar */}
       <footer className="border-t border-slate-200 bg-white py-6 dark:border-slate-800 dark:bg-slate-950 mt-12">
         <div className="mx-auto max-w-7xl px-4 text-center text-sm text-slate-400">
-          <p>© {new Date().getFullYear()} Toyxona & Bar Booking. Barcha huquqlar himoyalangan.</p>
+          <p>© {new Date().getFullYear()} Restoran & Bar Booking. Barcha huquqlar himoyalangan.</p>
         </div>
       </footer>
     </div>

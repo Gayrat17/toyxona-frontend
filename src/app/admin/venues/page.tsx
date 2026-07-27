@@ -65,7 +65,7 @@ export default function AdminVenuesPage() {
         <div className="space-y-4">
           <h3 className="text-base font-bold text-slate-800 dark:text-white flex items-center gap-2">
             <Hotel className="h-5 w-5 text-indigo-600" />
-            <span>To&apos;yxonalar ro&apos;yxati</span>
+            <span>Restoranlar ro&apos;yxati</span>
           </h3>
 
           {isLoading ? (
@@ -77,7 +77,7 @@ export default function AdminVenuesPage() {
               <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-800 text-left text-sm text-slate-500 dark:text-slate-400">
                 <thead className="bg-slate-50 dark:bg-slate-800/50 text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">
                   <tr>
-                    <th className="px-6 py-4">To&apos;yxona nomi</th>
+                    <th className="px-6 py-4">Restoran nomi</th>
                     <th className="px-6 py-4">Manzil</th>
                     <th className="px-6 py-4">Sig&apos;im</th>
                     <th className="px-6 py-4">Zakalat</th>
@@ -130,7 +130,7 @@ export default function AdminVenuesPage() {
               </table>
             </div>
           ) : (
-            <p className="text-sm text-slate-400 italic">To&apos;yxonalar topilmadi.</p>
+            <p className="text-sm text-slate-400 italic">Restoranlar topilmadi.</p>
           )}
         </div>
 

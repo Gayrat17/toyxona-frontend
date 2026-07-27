@@ -70,7 +70,7 @@ export default function HallDetailPage({ params }: PageProps) {
       <div className="flex h-screen flex-col items-center justify-center bg-slate-50 text-center dark:bg-slate-950 px-4">
         <h3 className="text-xl font-bold text-slate-800 dark:text-white">Zal topilmadi</h3>
         <p className="mt-2 text-sm text-slate-500 max-w-xs">
-          Siz qidirayotgan to&apos;yxona ma&apos;lumotlari topilmadi yoki backend tizimi bilan ulanish mavjud emas.
+          Siz qidirayotgan restoran ma&apos;lumotlari topilmadi yoki backend tizimi bilan ulanish mavjud emas.
         </p>
         <Link
           href="/"
@@ -97,7 +97,7 @@ export default function HallDetailPage({ params }: PageProps) {
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 font-black text-xl text-indigo-600 dark:text-indigo-400">
             <Sparkles className="h-6 w-6" />
-            <span>TO&apos;YXONA</span>
+            <span>RESTORAN</span>
           </Link>
 
           {/* User actions */}
@@ -186,7 +186,7 @@ export default function HallDetailPage({ params }: PageProps) {
               {/* Graphic Overlay info */}
               <div className="absolute bottom-6 left-6 right-6 z-10 flex flex-col gap-2 text-white">
                 <span className="inline-flex items-center gap-1 rounded-md bg-white/20 backdrop-blur-md px-3 py-1 text-xs font-bold text-white w-fit">
-                  <Hotel className="h-3.5 w-3.5" /> To&apos;yxona
+                  <Hotel className="h-3.5 w-3.5" /> Restoran
                 </span>
                 <h1 className="text-3xl sm:text-4xl font-black tracking-tight drop-shadow-md">{hall.name}</h1>
                 <p className="text-sm text-slate-200 flex items-center gap-1.5">
@@ -346,7 +346,7 @@ export default function HallDetailPage({ params }: PageProps) {
       {/* Footer bar */}
       <footer className="border-t border-slate-200 bg-white py-6 dark:border-slate-800 dark:bg-slate-950 mt-12">
         <div className="mx-auto max-w-7xl px-4 text-center text-sm text-slate-400">
-          <p>© {new Date().getFullYear()} Toyxona B2B Platformasi. Barcha huquqlar himoyalangan.</p>
+          <p>© {new Date().getFullYear()} Restoran B2B Platformasi. Barcha huquqlar himoyalangan.</p>
         </div>
       </footer>
     </div>

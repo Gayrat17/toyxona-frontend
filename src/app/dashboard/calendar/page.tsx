@@ -47,7 +47,7 @@ export default function OwnerCalendarPage() {
     setSuccess(false);
 
     if (!blockHallId || !blockShiftId || !blockDate) {
-      setError("Iltimos to'yxona, smena va sanani tanlang.");
+      setError("Iltimos restoran, smena va sanani tanlang.");
       return;
     }
 
@@ -73,7 +73,7 @@ export default function OwnerCalendarPage() {
   if (errorHalls) {
     return (
       <ErrorAlert 
-        message="To'yxonalar ro'yxatini yuklashda xatolik yuz berdi." 
+        message="Restoranlar ro'yxatini yuklashda xatolik yuz berdi." 
         onRetry={refetchHalls} 
       />
     );
@@ -83,7 +83,7 @@ export default function OwnerCalendarPage() {
     <div className="w-full max-w-4xl rounded-2xl border border-slate-200 bg-white p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900">
       <h3 className="text-base font-bold text-slate-800 dark:text-white mb-2">Taqvim Smenasini Yopish (Bloklash)</h3>
       <p className="text-xs text-slate-400 mb-6">
-        Muayyan to&apos;yxonadagi smenani belgilangan sanada bron qilishdan yopib qo&apos;yishingiz mumkin.
+        Muayyan restorandagi smenani belgilangan sanada bron qilishdan yopib qo&apos;yishingiz mumkin.
       </p>
 
       {error && (
@@ -102,14 +102,14 @@ export default function OwnerCalendarPage() {
 
       <form onSubmit={handleBlockSubmit} className="space-y-4">
         <div>
-          <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400">To&apos;yxonani tanlang</label>
+          <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400">Restoranni tanlang</label>
           <select
             required
             value={blockHallId}
             onChange={(e) => setBlockHallId(e.target.value)}
             className="mt-2 block w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 px-3 text-slate-800 focus:border-indigo-500 focus:bg-white focus:outline-none"
           >
-            <option value="">-- To&apos;yxona tanlang --</option>
+            <option value="">-- Restoran tanlang --</option>
             {halls.map((h) => (
               <option key={`h-opt-${h.id}`} value={h.id}>{h.name}</option>
             ))}
