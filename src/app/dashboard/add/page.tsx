@@ -4,24 +4,14 @@ import React, { useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { createHallRequest, createBarRequest } from '@/services/venues';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { createHallRequest, createBarRequest, fetchRegionsRequest } from '@/services/venues';
+import { Region } from '@/types';
 import { useRouter } from 'next/navigation';
 import { 
   Hotel, Wine, MapPin, DollarSign, Image as ImageIcon, Video, Check, 
   AlertCircle, UploadCloud, X, Sparkles, Shield, Wifi, Car, AirVent, Music, Baby, Accessibility, Plus 
 } from 'lucide-react';
-
-// Region & District Data for Uzbekistan
-const REGIONS: Record<string, string[]> = {
-  "Toshkent shahri": ["Yunusobod", "Chilonzor", "Mirzo Ulug'bek", "Yakkasaroy", "Mirobod", "Shayxontohur", "Olmazor", "Sergeli", "Yashnobod"],
-  "Toshkent viloyati": ["Keles", "Chirchiq", "Olmaliq", "Angren", "Yangiyo'l", "Qibray", "Zangiota"],
-  "Samarqand": ["Samarqand sh.", "Pastdarg'om", "Jomboy", "Toyloq", "Kattaqo'rg'on"],
-  "Buxoro": ["Buxoro sh.", "G'ijduvon", "Kogon", "Romitsh"],
-  "Farg'ona": ["Farg'ona sh.", "Marg'ilon", "Qo'qon", "Oltiariq"],
-  "Namangan": ["Namangan sh.", "Chust", "Pop", "Kosonsoy"],
-  "Andijon": ["Andijon sh.", "Asaka", "Shahrixon", "Xo'jaobod"],
-};
 
 // Amenities List
 const AMENITIES_LIST = [
@@ -60,6 +50,13 @@ export default function AddVenuePage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
+  // Fetch regions from database
+  const { data: dbRegions = [] } = useQuery<Region[]>({
+    queryKey: ['regions'],
+    queryFn: fetchRegionsRequest,
+    staleTime: 0,
+  });
+
   // Cover Image & Gallery Previews State
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
@@ -80,8 +77,8 @@ export default function AddVenuePage() {
       venue_type: 'HALL',
       name: '',
       description: '',
-      region: 'Toshkent shahri',
-      district: 'Yunusobod',
+      region: '',
+      district: '',
       address: '',
       map_link: '',
       capacity: 300,
@@ -93,7 +90,13 @@ export default function AddVenuePage() {
   });
 
   const selectedVenueType = watch('venue_type');
-  const selectedRegion = watch('region');
+  const selectedRegionId = watch('region');
+
+  const selectedRegionObj = React.useMemo(() => {
+    return dbRegions.find((r) => String(r.id) === String(selectedRegionId)) || null;
+  }, [dbRegions, selectedRegionId]);
+
+  const currentDistricts = selectedRegionObj?.districts || [];
 
   // Handle Cover Image selection
   const handleCoverChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -139,9 +142,9 @@ export default function AddVenuePage() {
       const formData = new FormData();
       formData.append('name', values.name);
       formData.append('description', values.description);
-      
-      const fullAddress = `${values.region}, ${values.district}, ${values.address}`;
-      formData.append('address', fullAddress);
+      formData.append('address', values.address);
+      if (values.region) formData.append('region', values.region);
+      if (values.district) formData.append('district', values.district);
       
       formData.append('required_deposit', values.required_deposit);
 
@@ -314,22 +317,27 @@ export default function AddVenuePage() {
                 {...register('region')}
                 className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 focus:border-indigo-500 focus:bg-white focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
               >
-                {Object.keys(REGIONS).map((reg) => (
-                  <option key={reg} value={reg}>{reg}</option>
+                <option value="">Viloyatni tanlang</option>
+                {dbRegions.map((reg) => (
+                  <option key={reg.id} value={String(reg.id)}>{reg.name}</option>
                 ))}
               </select>
+              {errors.region && <p className="mt-1 text-xs text-rose-500">{errors.region.message}</p>}
             </div>
 
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Tuman / Shahar *</label>
               <select
                 {...register('district')}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 focus:border-indigo-500 focus:bg-white focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                disabled={!selectedRegionId}
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 focus:border-indigo-500 focus:bg-white focus:outline-none disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
               >
-                {(REGIONS[selectedRegion] || []).map((dist) => (
-                  <option key={dist} value={dist}>{dist}</option>
+                <option value="">Tumanni tanlang</option>
+                {currentDistricts.map((dist) => (
+                  <option key={dist.id} value={String(dist.id)}>{dist.name}</option>
                 ))}
               </select>
+              {errors.district && <p className="mt-1 text-xs text-rose-500">{errors.district.message}</p>}
             </div>
           </div>
 

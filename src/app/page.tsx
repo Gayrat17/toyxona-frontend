@@ -39,34 +39,40 @@ function HomeContent() {
   const { data: dbRegions = [] } = useQuery<Region[]>({
     queryKey: ['regions'],
     queryFn: fetchRegionsRequest,
-    staleTime: 10 * 60 * 1000,
+    staleTime: 0,
   });
 
-  // 4. Fetch halls and bars concurrently from backend API with dynamic filter parameters
+  // 4. Determine active category (local selection takes priority over URL param)
+  const activeCategory = selectedCategory !== 'all' ? selectedCategory : categoryParam;
+
+  // 5. Fetch halls and bars from backend API — conditionally based on active category
   const filterParams: Record<string, string | number> = {};
   if (selectedRegion) filterParams.region = selectedRegion;
   if (selectedDistrict) filterParams.district = selectedDistrict;
   if (searchQuery.trim()) filterParams.search = searchQuery.trim();
   if (minCapacity > 0) filterParams.min_capacity = minCapacity;
 
+  const shouldFetchHalls = activeCategory === 'all' || activeCategory === 'halls';
+  const shouldFetchBars = activeCategory === 'all' || activeCategory === 'bars';
+
   const { data: hallsRes, isLoading: loadingHalls, error: errorHalls, refetch: refetchHalls } = useQuery<PaginatedResponse<WeddingHall>>({
-    queryKey: ['halls', filterParams],
+    queryKey: ['halls', filterParams, activeCategory],
     queryFn: () => fetchHallsRequest(1, false, filterParams),
     staleTime: 0,
+    enabled: shouldFetchHalls,
   });
 
   const { data: barsRes, isLoading: loadingBars, error: errorBars, refetch: refetchBars } = useQuery<PaginatedResponse<Bar>>({
-    queryKey: ['bars', filterParams],
+    queryKey: ['bars', filterParams, activeCategory],
     queryFn: () => fetchBarsRequest(1, false, filterParams),
     staleTime: 0,
+    enabled: shouldFetchBars,
   });
 
   const hallsList = hallsRes?.results || [];
   const barsList = barsRes?.results || [];
   
-  // Combine results based on Category selection (backend already filters by region, district, search, capacity)
-  const activeCategory = selectedCategory !== 'all' ? selectedCategory : categoryParam;
-
+  // Combine results based on active category
   let combinedList: (WeddingHall | Bar)[] = [];
   if (activeCategory === 'halls') {
     combinedList = hallsList;
@@ -76,7 +82,7 @@ function HomeContent() {
     combinedList = [...hallsList, ...barsList];
   }
 
-  const isLoading = loadingHalls || loadingBars;
+  const isLoading = (shouldFetchHalls && loadingHalls) || (shouldFetchBars && loadingBars);
   const isError = errorHalls || errorBars;
 
   return (

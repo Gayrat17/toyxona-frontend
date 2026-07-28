@@ -3,17 +3,7 @@
 import React from 'react';
 import { Search, MapPin, Users, Calendar, ArrowRight, Hotel, Wine, LayoutGrid, RotateCcw } from 'lucide-react';
 
-import { Region } from '@/types';
-
-export const UZ_REGIONS: Record<string, string[]> = {
-  "Toshkent shahri": ["Yunusobod", "Chilonzor", "Mirzo Ulug'bek", "Yakkasaroy", "Mirobod", "Shayxontohur", "Olmazor", "Sergeli", "Yashnobod"],
-  "Toshkent viloyati": ["Keles", "Chirchiq", "Olmaliq", "Angren", "Yangiyo'l", "Qibray", "Zangiota"],
-  "Samarqand": ["Samarqand sh.", "Pastdarg'om", "Jomboy", "Toyloq", "Kattaqo'rg'on"],
-  "Buxoro": ["Buxoro sh.", "G'ijduvon", "Kogon", "Romitsh"],
-  "Farg'ona": ["Farg'ona sh.", "Marg'ilon", "Qo'qon", "Oltiariq"],
-  "Namangan": ["Namangan sh.", "Chust", "Pop", "Kosonsoy"],
-  "Andijon": ["Andijon sh.", "Asaka", "Shahrixon", "Xo'jaobod"],
-};
+import { Region, District } from '@/types';
 
 interface SearchBarProps {
   selectedRegion: string;
@@ -46,23 +36,17 @@ export function SearchBar({
   setMinCapacity,
   selectedDate,
   setSelectedDate,
-  dbRegions,
+  dbRegions = [],
   onResetFilters,
   onSearchSubmit,
 }: SearchBarProps) {
-  // Derive regions & districts from backend API or fallback to static list
-  const regionsMap: Record<string, string[]> = React.useMemo(() => {
-    if (dbRegions && dbRegions.length > 0) {
-      const map: Record<string, string[]> = {};
-      dbRegions.forEach((r) => {
-        map[r.name] = (r.districts || []).map((d) => d.name);
-      });
-      return map;
-    }
-    return UZ_REGIONS;
-  }, [dbRegions]);
+  // Get districts for the selected region from database
+  const selectedRegionObj = React.useMemo(() => {
+    if (!selectedRegion || !dbRegions.length) return null;
+    return dbRegions.find((r) => String(r.id) === selectedRegion) || null;
+  }, [selectedRegion, dbRegions]);
 
-  const districts = selectedRegion && regionsMap[selectedRegion] ? regionsMap[selectedRegion] : [];
+  const districts: District[] = selectedRegionObj?.districts || [];
 
   const handleRegionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const val = e.target.value;
@@ -154,19 +138,19 @@ export function SearchBar({
             </label>
 
             <div className="grid grid-cols-2 gap-2">
-              {/* Region (Viloyat) Select */}
+              {/* Region (Viloyat) Select — value is region ID */}
               <select
                 value={selectedRegion}
                 onChange={handleRegionChange}
                 className="w-full rounded-xl border border-slate-200 bg-slate-50/80 py-2 px-2.5 text-xs font-semibold text-slate-800 focus:border-indigo-500 focus:bg-white focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
               >
                 <option value="">Barcha viloyatlar</option>
-                {Object.keys(regionsMap).map((reg) => (
-                  <option key={`r-${reg}`} value={reg}>{reg}</option>
+                {dbRegions.map((region) => (
+                  <option key={`r-${region.id}`} value={String(region.id)}>{region.name}</option>
                 ))}
               </select>
 
-              {/* District (Tuman) Select */}
+              {/* District (Tuman) Select — value is district ID */}
               <select
                 value={selectedDistrict}
                 disabled={!selectedRegion}
@@ -175,7 +159,7 @@ export function SearchBar({
               >
                 <option value="">Barcha tumanlar</option>
                 {districts.map((dist) => (
-                  <option key={`d-${dist}`} value={dist}>{dist}</option>
+                  <option key={`d-${dist.id}`} value={String(dist.id)}>{dist.name}</option>
                 ))}
               </select>
             </div>

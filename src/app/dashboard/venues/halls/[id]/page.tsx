@@ -7,8 +7,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { fetchHallByIdRequest, updateHallRequest } from '@/services/venues';
-import { WeddingHall } from '@/types';
+import { fetchHallByIdRequest, updateHallRequest, fetchRegionsRequest } from '@/services/venues';
+import { WeddingHall, Region } from '@/types';
 import { SkeletonCardLoader } from '@/components/common/skeleton-loader';
 import { ErrorAlert } from '@/components/common/error-alert';
 import { 
@@ -16,22 +16,6 @@ import {
   Sparkles, Video, ArrowLeft, Save, UploadCloud, Plus, X, Check, Loader2,
   Car, Wifi, Wind, Volume2, ShieldCheck, Coffee, Utensils
 } from 'lucide-react';
-
-const REGIONS: Record<string, string[]> = {
-  'Toshkent shahri': ['Yunusobod', 'Mirzo Ulugbek', 'Chilonzor', 'Yakkasaroy', 'Mirobod', 'Shayxontohur', 'Olmazor', 'Uchtepa', 'Sergeli', 'Yangihayot', 'Bektemir'],
-  'Toshkent viloyati': ['Chirchiq', 'Olmaliq', 'Angren', 'Zangiota', 'Qibray', 'Parkent', 'Buka', 'Chinaz'],
-  'Samarqand': ['Samarqand sh.', 'Pastdargom', 'Kattaqurgon', 'Jomboy', 'Urgut', 'Bulungur'],
-  'Fargʻona': ['Fargʻona sh.', 'Margʻilon', 'Qoʻqon', 'Oltiariq', 'Rishton', 'Beshariq'],
-  'Andijon': ['Andijon sh.', 'Asaka', 'Shahrixon', 'Xoʻjaobod', 'Marhamat'],
-  'Namangan': ['Namangan sh.', 'Chust', 'Pop', 'Uychi', 'Kosonsoy'],
-  'Buxoro': ['Buxoro sh.', 'Gʻijduvon', 'Kogon', 'Vobkent'],
-  'Xorazm': ['Urganch sh.', 'Xiva sh.', 'Xazorasp', 'Gurlan'],
-  'Qashqadaryo': ['Qarshi sh.', 'Shahrisabz', 'Kitob', 'Koson', 'Gʻuzor'],
-  'Surxondaryo': ['Termiz sh.', 'Denov', 'Sherobod', 'Jarqoʻrgʻon'],
-  'Navoiy': ['Navoiy sh.', 'Zarafshon', 'Karmana', 'Kiziltepa'],
-  'Jizzax': ['Jizzax sh.', 'Zaamin', 'Gallaorol', 'Dostlik'],
-  'Qoraqalpogʻiston R.': ['Nukus sh.', 'Xoʻjayli', 'Tohiatosh', 'Qoʻngʻirot']
-};
 
 const AMENITIES_LIST = [
   { id: 'parking', label: 'Avtoturargoh (Parking)', icon: Car },
@@ -78,7 +62,13 @@ export default function WeddingHallEditPage() {
   const [newGalleryFiles, setNewGalleryFiles] = useState<File[]>([]);
   const [newGalleryPreviews, setNewGalleryPreviews] = useState<string[]>([]);
 
-  // 1. Fetch Hall details
+  // 1. Fetch Hall details and DB Regions
+  const { data: dbRegions = [] } = useQuery<Region[]>({
+    queryKey: ['regions'],
+    queryFn: fetchRegionsRequest,
+    staleTime: 0,
+  });
+
   const { data: hall, isLoading, isError, error: fetchError } = useQuery<WeddingHall>({
     queryKey: ['hallDetail', id],
     queryFn: () => fetchHallByIdRequest(id),
@@ -97,8 +87,8 @@ export default function WeddingHallEditPage() {
     defaultValues: {
       name: '',
       description: '',
-      region: 'Toshkent shahri',
-      district: 'Yunusobod',
+      region: '',
+      district: '',
       address: '',
       map_link: '',
       max_capacity: 300,
@@ -112,11 +102,6 @@ export default function WeddingHallEditPage() {
   // 2. Populate form fields and media previews when hall data arrives
   useEffect(() => {
     if (hall) {
-      const addressParts = hall.address ? hall.address.split(', ') : [];
-      const region = addressParts[0] && REGIONS[addressParts[0]] ? addressParts[0] : 'Toshkent shahri';
-      const district = addressParts[1] || 'Yunusobod';
-      const streetAddress = addressParts.slice(2).join(', ') || hall.address;
-
       if (hall.cover_image_url) {
         setCoverPreview(hall.cover_image_url);
       } else {
@@ -142,9 +127,9 @@ export default function WeddingHallEditPage() {
       reset({
         name: hall.name || '',
         description: hall.description || '',
-        region,
-        district,
-        address: streetAddress,
+        region: hall.region ? String(hall.region) : '',
+        district: hall.district ? String(hall.district) : '',
+        address: hall.address || '',
         map_link: hall.map_link || '',
         video_url: hall.video_url || '',
         max_capacity: hall.max_capacity || 300,
@@ -155,7 +140,13 @@ export default function WeddingHallEditPage() {
     }
   }, [hall, reset]);
 
-  const selectedRegion = watch('region');
+  const selectedRegionId = watch('region');
+
+  const selectedRegionObj = React.useMemo(() => {
+    return dbRegions.find((r) => String(r.id) === String(selectedRegionId)) || null;
+  }, [dbRegions, selectedRegionId]);
+
+  const currentDistricts = selectedRegionObj?.districts || [];
 
   // Media Handlers
   const handleCoverChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -229,14 +220,14 @@ export default function WeddingHallEditPage() {
     setSuccess(false);
 
     try {
-      const fullAddress = `${values.region}, ${values.district}, ${values.address}`;
-
       const formData = new FormData();
       formData.append('name', values.name);
       formData.append('description', values.description);
       formData.append('max_capacity', values.max_capacity.toString());
       formData.append('required_deposit', values.required_deposit);
-      formData.append('address', fullAddress);
+      formData.append('address', values.address);
+      if (values.region) formData.append('region', values.region);
+      if (values.district) formData.append('district', values.district);
 
       if (values.map_link) formData.append('map_link', values.map_link);
       if (values.video_url) formData.append('video_url', values.video_url);
@@ -413,8 +404,9 @@ export default function WeddingHallEditPage() {
                 {...register('region')}
                 className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-800 focus:border-indigo-500 focus:bg-white focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
               >
-                {Object.keys(REGIONS).map((reg) => (
-                  <option key={reg} value={reg}>{reg}</option>
+                <option value="">Viloyatni tanlang</option>
+                {dbRegions.map((reg) => (
+                  <option key={reg.id} value={String(reg.id)}>{reg.name}</option>
                 ))}
               </select>
             </div>
@@ -423,10 +415,12 @@ export default function WeddingHallEditPage() {
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Tuman / Shahar *</label>
               <select
                 {...register('district')}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-800 focus:border-indigo-500 focus:bg-white focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                disabled={!selectedRegionId}
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-800 focus:border-indigo-500 focus:bg-white focus:outline-none disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
               >
-                {(REGIONS[selectedRegion] || []).map((dist) => (
-                  <option key={dist} value={dist}>{dist}</option>
+                <option value="">Tumanni tanlang</option>
+                {currentDistricts.map((dist) => (
+                  <option key={dist.id} value={String(dist.id)}>{dist.name}</option>
                 ))}
               </select>
             </div>
