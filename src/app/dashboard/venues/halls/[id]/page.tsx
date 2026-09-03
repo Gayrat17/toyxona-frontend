@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -13,7 +13,7 @@ import { SkeletonCardLoader } from '@/components/common/skeleton-loader';
 import { ErrorAlert } from '@/components/common/error-alert';
 import { 
   Hotel, MapPin, Users, DollarSign, Image as ImageIcon, 
-  Sparkles, Video, ArrowLeft, Save, UploadCloud, Plus, X, Check, Loader2,
+  Sparkles, ArrowLeft, Save, UploadCloud, Plus, X, Check, Loader2,
   Car, Wifi, Wind, Volume2, ShieldCheck, Coffee, Utensils
 } from 'lucide-react';
 
@@ -44,7 +44,6 @@ const hallEditSchema = z.object({
 type HallEditFormData = z.infer<typeof hallEditSchema>;
 
 export default function WeddingHallEditPage() {
-  const router = useRouter();
   const params = useParams();
   const queryClient = useQueryClient();
   const id = Number(params?.id);
@@ -289,7 +288,7 @@ export default function WeddingHallEditPage() {
         />
         <Link 
           href="/dashboard/venues"
-          className="inline-flex items-center gap-2 text-sm font-semibold text-indigo-600 hover:text-indigo-500"
+          className="inline-flex items-center gap-2 text-sm font-semibold text-gold-strong hover:text-gold-strong"
         >
           <ArrowLeft className="h-4 w-4" /> Ro&apos;yxatga qaytish
         </Link>
@@ -301,22 +300,22 @@ export default function WeddingHallEditPage() {
     <div className="max-w-5xl mx-auto space-y-8 pb-12">
       
       {/* Top Header & Breadcrumb */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-line dark:border-line pb-6">
         <div>
-          <div className="flex items-center gap-2 text-xs font-semibold text-slate-400 mb-2">
-            <Link href="/dashboard/venues" className="hover:text-indigo-600 transition-colors">Joylar ro&apos;yxati</Link>
+          <div className="flex items-center gap-2 text-xs font-semibold text-ink-faint mb-2">
+            <Link href="/dashboard/venues" className="hover:text-gold-strong transition-colors">Joylar ro&apos;yxati</Link>
             <span>/</span>
-            <span className="text-slate-700 dark:text-slate-200">Restoranni tahrirlash</span>
+            <span className="text-ink dark:text-ink">Restoranni tahrirlash</span>
           </div>
-          <h1 className="text-2xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
-            <Hotel className="h-7 w-7 text-indigo-600" />
+          <h1 className="text-2xl font-bold text-ink dark:text-ink flex items-center gap-2">
+            <Hotel className="h-7 w-7 text-gold-strong" />
             {hall.name} - Tahrirlash
           </h1>
         </div>
 
         <Link
           href="/dashboard/venues"
-          className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+          className="inline-flex items-center gap-2 rounded-xl border border-line bg-white px-4 py-2.5 text-xs font-semibold text-ink shadow-sm transition-colors hover:bg-surface-2/60 dark:border-line dark:bg-surface dark:text-ink"
         >
           <ArrowLeft className="h-4 w-4" /> Orqaga
         </Link>
@@ -326,8 +325,8 @@ export default function WeddingHallEditPage() {
       {error && <ErrorAlert message={error} />}
 
       {success && (
-        <div className="flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50/80 p-4 text-emerald-800 dark:border-emerald-900/40 dark:bg-emerald-950/40 dark:text-emerald-300 animate-in fade-in">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500 text-white">
+        <div className="flex items-center gap-3 rounded-2xl border border-success/40 bg-success/10 p-4 text-success dark:border-success/40 dark:bg-success/10 dark:text-success animate-in fade-in">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-success text-white">
             <Check className="h-5 w-5" />
           </div>
           <div>
@@ -341,68 +340,68 @@ export default function WeddingHallEditPage() {
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
         
         {/* CARD 1: Asosiy Ma'lumotlar */}
-        <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900 space-y-6">
-          <div className="flex items-center gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600">
+        <div className="rounded-3xl border border-line bg-white p-8 shadow-sm dark:border-line dark:bg-surface space-y-6">
+          <div className="flex items-center gap-3 border-b border-line dark:border-line pb-4">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gold-tint dark:bg-gold/10 text-gold-strong">
               <Hotel className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-slate-800 dark:text-white">1. Asosiy Ma&apos;lumotlar</h3>
-              <p className="text-xs text-slate-400">Restoranning nomi, sig&apos;imi va umumiy tavsifini o&apos;zgartiring</p>
+              <h3 className="text-base font-bold text-ink dark:text-ink">1. Asosiy Ma&apos;lumotlar</h3>
+              <p className="text-xs text-ink-faint">Restoranning nomi, sig&apos;imi va umumiy tavsifini o&apos;zgartiring</p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Restoran Nomi *</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-ink-faint mb-2">Restoran Nomi *</label>
               <input
                 type="text"
                 {...register('name')}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-800 focus:border-indigo-500 focus:bg-white focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                className="w-full rounded-xl border border-line bg-surface-2/60 px-4 py-3 text-sm font-semibold text-ink focus:border-gold focus:bg-white focus:outline-none dark:border-line-strong dark:bg-surface-2 dark:text-ink"
               />
-              {errors.name && <p className="mt-1 text-xs text-rose-500">{errors.name.message}</p>}
+              {errors.name && <p className="mt-1 text-xs text-danger">{errors.name.message}</p>}
             </div>
 
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Maksimal Sig&apos;im (Kishi) *</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-ink-faint mb-2">Maksimal Sig&apos;im (Kishi) *</label>
               <input
                 type="number"
                 {...register('max_capacity')}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-800 focus:border-indigo-500 focus:bg-white focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                className="w-full rounded-xl border border-line bg-surface-2/60 px-4 py-3 text-sm font-semibold text-ink focus:border-gold focus:bg-white focus:outline-none dark:border-line-strong dark:bg-surface-2 dark:text-ink"
               />
-              {errors.max_capacity && <p className="mt-1 text-xs text-rose-500">{errors.max_capacity.message}</p>}
+              {errors.max_capacity && <p className="mt-1 text-xs text-danger">{errors.max_capacity.message}</p>}
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">To&apos;liq Tavsif *</label>
+            <label className="block text-xs font-bold uppercase tracking-wider text-ink-faint mb-2">To&apos;liq Tavsif *</label>
             <textarea
               rows={4}
               {...register('description')}
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 focus:border-indigo-500 focus:bg-white focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+              className="w-full rounded-xl border border-line bg-surface-2/60 px-4 py-3 text-sm text-ink focus:border-gold focus:bg-white focus:outline-none dark:border-line-strong dark:bg-surface-2 dark:text-ink"
             />
-            {errors.description && <p className="mt-1 text-xs text-rose-500">{errors.description.message}</p>}
+            {errors.description && <p className="mt-1 text-xs text-danger">{errors.description.message}</p>}
           </div>
         </div>
 
         {/* CARD 2: Manzil va Lokatsiya */}
-        <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900 space-y-6">
-          <div className="flex items-center gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600">
+        <div className="rounded-3xl border border-line bg-white p-8 shadow-sm dark:border-line dark:bg-surface space-y-6">
+          <div className="flex items-center gap-3 border-b border-line dark:border-line pb-4">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gold-tint dark:bg-gold/10 text-gold-strong">
               <MapPin className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-slate-800 dark:text-white">2. Manzil va Lokatsiya</h3>
-              <p className="text-xs text-slate-400">Viloyat, tuman va ko&apos;cha ma&apos;lumotlarini yangilang</p>
+              <h3 className="text-base font-bold text-ink dark:text-ink">2. Manzil va Lokatsiya</h3>
+              <p className="text-xs text-ink-faint">Viloyat, tuman va ko&apos;cha ma&apos;lumotlarini yangilang</p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Viloyat *</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-ink-faint mb-2">Viloyat *</label>
               <select
                 {...register('region')}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-800 focus:border-indigo-500 focus:bg-white focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                className="w-full rounded-xl border border-line bg-surface-2/60 px-4 py-3 text-sm font-semibold text-ink focus:border-gold focus:bg-white focus:outline-none dark:border-line-strong dark:bg-surface-2 dark:text-ink"
               >
                 <option value="">Viloyatni tanlang</option>
                 {dbRegions.map((reg) => (
@@ -412,11 +411,11 @@ export default function WeddingHallEditPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Tuman / Shahar *</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-ink-faint mb-2">Tuman / Shahar *</label>
               <select
                 {...register('district')}
                 disabled={!selectedRegionId}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-800 focus:border-indigo-500 focus:bg-white focus:outline-none disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                className="w-full rounded-xl border border-line bg-surface-2/60 px-4 py-3 text-sm font-semibold text-ink focus:border-gold focus:bg-white focus:outline-none disabled:opacity-50 dark:border-line-strong dark:bg-surface-2 dark:text-ink"
               >
                 <option value="">Tumanni tanlang</option>
                 {currentDistricts.map((dist) => (
@@ -427,80 +426,80 @@ export default function WeddingHallEditPage() {
           </div>
 
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Aniq manzil *</label>
+            <label className="block text-xs font-bold uppercase tracking-wider text-ink-faint mb-2">Aniq manzil *</label>
             <input
               type="text"
               {...register('address')}
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-800 focus:border-indigo-500 focus:bg-white focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+              className="w-full rounded-xl border border-line bg-surface-2/60 px-4 py-3 text-sm font-semibold text-ink focus:border-gold focus:bg-white focus:outline-none dark:border-line-strong dark:bg-surface-2 dark:text-ink"
             />
-            {errors.address && <p className="mt-1 text-xs text-rose-500">{errors.address.message}</p>}
+            {errors.address && <p className="mt-1 text-xs text-danger">{errors.address.message}</p>}
           </div>
 
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Google / Yandex Xarita havolasi</label>
+            <label className="block text-xs font-bold uppercase tracking-wider text-ink-faint mb-2">Google / Yandex Xarita havolasi</label>
             <input
               type="url"
               placeholder="https://maps.google.com/..."
               {...register('map_link')}
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 focus:border-indigo-500 focus:bg-white focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+              className="w-full rounded-xl border border-line bg-surface-2/60 px-4 py-3 text-sm text-ink focus:border-gold focus:bg-white focus:outline-none dark:border-line-strong dark:bg-surface-2 dark:text-ink"
             />
           </div>
         </div>
 
         {/* CARD 3: Moliyaviy Ko'rsatkichlar */}
-        <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900 space-y-6">
-          <div className="flex items-center gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 dark:bg-emerald-950 text-emerald-600">
+        <div className="rounded-3xl border border-line bg-white p-8 shadow-sm dark:border-line dark:bg-surface space-y-6">
+          <div className="flex items-center gap-3 border-b border-line dark:border-line pb-4">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-success/10 dark:bg-success/10 text-success">
               <DollarSign className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-slate-800 dark:text-white">3. Moliyaviy ko&apos;rsatkichlar</h3>
-              <p className="text-xs text-slate-400">Zakalat miqdori va paket narxlarini o&apos;zgartiring</p>
+              <h3 className="text-base font-bold text-ink dark:text-ink">3. Moliyaviy ko&apos;rsatkichlar</h3>
+              <p className="text-xs text-ink-faint">Zakalat miqdori va paket narxlarini o&apos;zgartiring</p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Talab qilinadigan Zakalat (UZS) *</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-ink-faint mb-2">Talab qilinadigan Zakalat (UZS) *</label>
               <input
                 type="text"
                 {...register('required_deposit')}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-800 focus:border-indigo-500 focus:bg-white focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                className="w-full rounded-xl border border-line bg-surface-2/60 px-4 py-3 text-sm font-semibold text-ink focus:border-gold focus:bg-white focus:outline-none dark:border-line-strong dark:bg-surface-2 dark:text-ink"
               />
-              {errors.required_deposit && <p className="mt-1 text-xs text-rose-500">{errors.required_deposit.message}</p>}
+              {errors.required_deposit && <p className="mt-1 text-xs text-danger">{errors.required_deposit.message}</p>}
             </div>
 
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Odam boshiga / Paket narxi (UZS)</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-ink-faint mb-2">Odam boshiga / Paket narxi (UZS)</label>
               <input
                 type="text"
                 {...register('price_per_person')}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-800 focus:border-indigo-500 focus:bg-white focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                className="w-full rounded-xl border border-line bg-surface-2/60 px-4 py-3 text-sm font-semibold text-ink focus:border-gold focus:bg-white focus:outline-none dark:border-line-strong dark:bg-surface-2 dark:text-ink"
               />
             </div>
           </div>
         </div>
 
         {/* CARD 4: Media (Rasm va Video) */}
-        <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900 space-y-6">
-          <div className="flex items-center gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-50 dark:bg-purple-950 text-purple-600">
+        <div className="rounded-3xl border border-line bg-white p-8 shadow-sm dark:border-line dark:bg-surface space-y-6">
+          <div className="flex items-center gap-3 border-b border-line dark:border-line pb-4">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-wine/10 dark:bg-wine/10 text-wine">
               <ImageIcon className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-slate-800 dark:text-white">4. Media (Rasm va Video)</h3>
-              <p className="text-xs text-slate-400">Yangi rasmlarni yuklang, keraksiz rasmlardagi &quot;X&quot; ni bosib o&apos;chiring</p>
+              <h3 className="text-base font-bold text-ink dark:text-ink">4. Media (Rasm va Video)</h3>
+              <p className="text-xs text-ink-faint">Yangi rasmlarni yuklang, keraksiz rasmlardagi &quot;X&quot; ni bosib o&apos;chiring</p>
             </div>
           </div>
 
           {/* Asosiy Rasm (Cover) */}
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Asosiy Rasm (Cover)</label>
+            <label className="block text-xs font-bold uppercase tracking-wider text-ink-faint mb-2">Asosiy Rasm (Cover)</label>
             <div className="flex items-center gap-6">
               {coverPreview ? (
-                <div className="relative h-36 w-56 overflow-hidden rounded-2xl border border-slate-200 shadow-sm group">
+                <div className="relative h-36 w-56 overflow-hidden rounded-2xl border border-line shadow-sm group">
                   <img src={coverPreview} alt="Cover Preview" className="h-full w-full object-cover" />
-                  <label className="absolute inset-0 bg-slate-900/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer text-white text-xs font-bold gap-1">
+                  <label className="absolute inset-0 bg-espresso/70 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer text-white text-xs font-bold gap-1">
                     <UploadCloud className="h-5 w-5" /> Rasm almashtirish
                     <input type="file" accept="image/*" className="hidden" onChange={handleCoverChange} />
                   </label>
@@ -508,15 +507,15 @@ export default function WeddingHallEditPage() {
                     type="button"
                     onClick={handleRemoveCover}
                     title="Rasmni o'chirish"
-                    className="absolute top-2 right-2 rounded-full bg-rose-600 p-1.5 text-white shadow-md hover:bg-rose-500 z-10 transition-transform hover:scale-110"
+                    className="absolute top-2 right-2 rounded-full bg-danger p-1.5 text-white shadow-md hover:brightness-110 z-10 transition-transform hover:scale-110"
                   >
                     <X className="h-4 w-4" />
                   </button>
                 </div>
               ) : (
-                <label className="flex h-36 w-56 cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50/50 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800/40 transition-colors">
-                  <UploadCloud className="h-8 w-8 text-indigo-500 mb-1" />
-                  <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">Rasm yuklash</span>
+                <label className="flex h-36 w-56 cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-line-strong bg-surface-2/60 hover:bg-gold-tint dark:border-line-strong dark:bg-surface-2/60 transition-colors">
+                  <UploadCloud className="h-8 w-8 text-gold-strong mb-1" />
+                  <span className="text-xs font-semibold text-ink-soft dark:text-ink-soft">Rasm yuklash</span>
                   <input type="file" accept="image/*" className="hidden" onChange={handleCoverChange} />
                 </label>
               )}
@@ -525,17 +524,17 @@ export default function WeddingHallEditPage() {
 
           {/* Qo'shimcha Galereya Rasmlari */}
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Qo&apos;shimcha Galereya Rasmlari</label>
+            <label className="block text-xs font-bold uppercase tracking-wider text-ink-faint mb-2">Qo&apos;shimcha Galereya Rasmlari</label>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {/* Existing Gallery Images */}
               {existingGallery.map((img) => (
-                <div key={`existing-${img.id}`} className="relative h-28 overflow-hidden rounded-2xl border border-slate-200 shadow-sm group">
+                <div key={`existing-${img.id}`} className="relative h-28 overflow-hidden rounded-2xl border border-line shadow-sm group">
                   <img src={img.url} alt={`Gallery ${img.id}`} className="h-full w-full object-cover" />
                   <button
                     type="button"
                     onClick={() => handleRemoveExistingGalleryImage(img.id)}
                     title="Rasmni o'chirish"
-                    className="absolute top-1.5 right-1.5 rounded-full bg-rose-600 p-1 text-white shadow hover:bg-rose-500 z-10 transition-transform hover:scale-110"
+                    className="absolute top-1.5 right-1.5 rounded-full bg-danger p-1 text-white shadow hover:brightness-110 z-10 transition-transform hover:scale-110"
                   >
                     <X className="h-3.5 w-3.5" />
                   </button>
@@ -544,48 +543,48 @@ export default function WeddingHallEditPage() {
 
               {/* Newly Added Gallery Files */}
               {newGalleryPreviews.map((preview, idx) => (
-                <div key={`new-${idx}`} className="relative h-28 overflow-hidden rounded-2xl border border-indigo-300 shadow-sm group">
+                <div key={`new-${idx}`} className="relative h-28 overflow-hidden rounded-2xl border border-gold/50 shadow-sm group">
                   <img src={preview} alt={`New Gallery ${idx}`} className="h-full w-full object-cover" />
-                  <span className="absolute bottom-1 left-1 bg-indigo-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-md">Yangi</span>
+                  <span className="absolute bottom-1 left-1 bg-espresso text-white text-[9px] font-bold px-1.5 py-0.5 rounded-md">Yangi</span>
                   <button
                     type="button"
                     onClick={() => handleRemoveNewGalleryImage(idx)}
                     title="Rasmni o'chirish"
-                    className="absolute top-1.5 right-1.5 rounded-full bg-rose-600 p-1 text-white shadow hover:bg-rose-500 z-10 transition-transform hover:scale-110"
+                    className="absolute top-1.5 right-1.5 rounded-full bg-danger p-1 text-white shadow hover:brightness-110 z-10 transition-transform hover:scale-110"
                   >
                     <X className="h-3.5 w-3.5" />
                   </button>
                 </div>
               ))}
 
-              <label className="flex h-28 cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50/50 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800/40 transition-colors">
-                <Plus className="h-6 w-6 text-slate-400 mb-1" />
-                <span className="text-xs font-semibold text-slate-500">Rasm qo&apos;shish</span>
+              <label className="flex h-28 cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-line-strong bg-surface-2/60 hover:bg-gold-tint dark:border-line-strong dark:bg-surface-2/60 transition-colors">
+                <Plus className="h-6 w-6 text-ink-faint mb-1" />
+                <span className="text-xs font-semibold text-ink-soft">Rasm qo&apos;shish</span>
                 <input type="file" accept="image/*" multiple className="hidden" onChange={handleGalleryChange} />
               </label>
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">YouTube Video Havolasi</label>
+            <label className="block text-xs font-bold uppercase tracking-wider text-ink-faint mb-2">YouTube Video Havolasi</label>
             <input
               type="url"
               placeholder="https://youtube.com/watch?v=..."
               {...register('video_url')}
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 focus:border-indigo-500 focus:bg-white focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+              className="w-full rounded-xl border border-line bg-surface-2/60 px-4 py-3 text-sm text-ink focus:border-gold focus:bg-white focus:outline-none dark:border-line-strong dark:bg-surface-2 dark:text-ink"
             />
           </div>
         </div>
 
         {/* CARD 5: Qo'shimcha Qulayliklar */}
-        <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900 space-y-6">
-          <div className="flex items-center gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 dark:bg-amber-950 text-amber-600">
+        <div className="rounded-3xl border border-line bg-white p-8 shadow-sm dark:border-line dark:bg-surface space-y-6">
+          <div className="flex items-center gap-3 border-b border-line dark:border-line pb-4">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gold/10 dark:bg-gold/10 text-gold-strong">
               <Sparkles className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-slate-800 dark:text-white">5. Qo&apos;shimcha Qulayliklar</h3>
-              <p className="text-xs text-slate-400">Restorandagi yaratilgan imkoniyatlarni tanlang</p>
+              <h3 className="text-base font-bold text-ink dark:text-ink">5. Qo&apos;shimcha Qulayliklar</h3>
+              <p className="text-xs text-ink-faint">Restorandagi yaratilgan imkoniyatlarni tanlang</p>
             </div>
           </div>
 
@@ -603,8 +602,8 @@ export default function WeddingHallEditPage() {
                       key={item.id}
                       className={`flex items-center gap-3 rounded-2xl border p-3.5 cursor-pointer transition-all ${
                         isChecked
-                          ? 'border-indigo-500 bg-indigo-50/50 text-indigo-900 dark:bg-indigo-950/30 dark:text-indigo-200 shadow-sm'
-                          : 'border-slate-200 bg-white text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400 hover:border-slate-300'
+                          ? 'border-gold bg-gold-tint/60 text-gold-strong dark:bg-gold/10 dark:text-gold-soft shadow-sm'
+                          : 'border-line bg-white text-ink-soft dark:border-line dark:bg-surface dark:text-ink-faint hover:border-line-strong'
                       }`}
                     >
                       <input
@@ -618,9 +617,9 @@ export default function WeddingHallEditPage() {
                             field.onChange(current.filter((val) => val !== item.id));
                           }
                         }}
-                        className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                        className="h-4 w-4 rounded border-line-strong text-gold-strong focus:ring-gold"
                       />
-                      <Icon className="h-4 w-4 shrink-0 text-indigo-500" />
+                      <Icon className="h-4 w-4 shrink-0 text-gold-strong" />
                       <span className="text-xs font-bold">{item.label}</span>
                     </label>
                   );
@@ -631,10 +630,10 @@ export default function WeddingHallEditPage() {
         </div>
 
         {/* Submit Actions Bar */}
-        <div className="flex items-center justify-end gap-4 border-t border-slate-200 dark:border-slate-800 pt-6">
+        <div className="flex items-center justify-end gap-4 border-t border-line dark:border-line pt-6">
           <Link
             href="/dashboard/venues"
-            className="rounded-xl border border-slate-200 bg-white px-6 py-3 text-sm font-bold text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
+            className="rounded-xl border border-line bg-white px-6 py-3 text-sm font-bold text-ink-soft hover:bg-surface-2/60 dark:border-line dark:bg-surface dark:text-ink-soft"
           >
             Bekor qilish
           </Link>
@@ -642,7 +641,7 @@ export default function WeddingHallEditPage() {
           <button
             type="submit"
             disabled={isSubmitting || updateHallMutation.isPending}
-            className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-8 py-3 text-sm font-bold text-white shadow-lg transition-all hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center gap-2 rounded-xl bg-espresso px-8 py-3 text-sm font-bold text-white shadow-lg transition-all hover:bg-espresso-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSubmitting || updateHallMutation.isPending ? (
               <>

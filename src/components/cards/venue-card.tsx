@@ -1,7 +1,7 @@
 import React from 'react';
 import { WeddingHall, Bar } from '@/types';
 import Link from 'next/link';
-import { MapPin, Users, DollarSign, Hotel, Wine } from 'lucide-react';
+import { MapPin, Users, Hotel, Wine, ArrowUpRight, BadgeCheck } from 'lucide-react';
 import { getMediaUrl } from '@/utils/media';
 
 interface VenueCardProps {
@@ -26,95 +26,106 @@ export const VenueCard: React.FC<VenueCardProps> = ({ venue }) => {
   const address = venue.address;
   const capacity = isHall ? (venue as WeddingHall).max_capacity : (venue as Bar).capacity;
   const coverUrl = getVenueCover(venue);
-  
-  // Format prices cleanly
-  const depositFormatted = isHall 
-    ? `${parseFloat((venue as WeddingHall).required_deposit).toLocaleString()} UZS (Zakalat)`
-    : '';
+
   const priceFormatted = isHall
-    ? 'Paketlar bo\'yicha'
-    : `${parseFloat((venue as Bar).price_per_hour).toLocaleString()} UZS / soat`;
+    ? 'Paketlar bo‘yicha'
+    : `${parseFloat((venue as Bar).price_per_hour).toLocaleString('uz-UZ')} UZS / soat`;
 
   const linkPath = isHall ? `/venues/halls/${id}` : `/venues/bars/${id}`;
 
   return (
-    <Link 
-      href={linkPath} 
-      className="group relative flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-indigo-200 hover:shadow-md dark:border-slate-800 dark:bg-slate-950 dark:hover:border-indigo-900"
-    >
-      {/* Venue Image / Placeholder Gradient */}
-      <div className="relative flex h-48 w-full items-center justify-center overflow-hidden bg-slate-100 dark:bg-slate-900">
-        {coverUrl ? (
-          <>
-            <img 
-              src={coverUrl} 
-              alt={name} 
-              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" 
+    <Link href={linkPath} className="group block">
+      <div className="card-lux card-lux-hover h-full overflow-hidden">
+        {/* Media */}
+        <div className="relative h-56 w-full overflow-hidden">
+          {coverUrl ? (
+            <img
+              src={coverUrl}
+              alt={name}
+              className="h-full w-full object-cover transition-transform duration-[1200ms] ease-out group-hover:scale-[1.06]"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-900/70 via-transparent to-transparent" />
-          </>
-        ) : (
-          <>
-            <div className={`absolute inset-0 opacity-40 transition-transform duration-500 group-hover:scale-105 bg-gradient-to-br ${
-              isHall ? 'from-teal-400 via-emerald-500 to-indigo-600' : 'from-purple-500 via-indigo-600 to-pink-500'
-            }`} />
-            
-            <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl bg-white/90 shadow-sm backdrop-blur-sm dark:bg-slate-900/90">
+          ) : (
+            <div
+              className={`flex h-full w-full items-center justify-center ${
+                isHall
+                  ? 'bg-gradient-to-br from-[#3a2e18] via-[#2a2113] to-[#1c1509]'
+                  : 'bg-gradient-to-br from-[#33203a] via-[#241531] to-[#150a1d]'
+              }`}
+            >
+              <div
+                className="absolute inset-0 opacity-[0.12]"
+                style={{
+                  backgroundImage:
+                    "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='84' height='84' viewBox='0 0 84 84'%3E%3Cg fill='none' stroke='%23cda964' stroke-width='1'%3E%3Crect x='26' y='26' width='32' height='32'/%3E%3Crect x='26' y='26' width='32' height='32' transform='rotate(45 42 42)'/%3E%3Ccircle cx='42' cy='42' r='4.5'/%3E%3C/g%3E%3C/svg%3E\")",
+                }}
+              />
               {isHall ? (
-                <Hotel className="h-8 w-8 text-emerald-600 dark:text-emerald-400" />
+                <Hotel className="h-12 w-12 text-gold-soft" />
               ) : (
-                <Wine className="h-8 w-8 text-indigo-600 dark:text-indigo-400" />
+                <Wine className="h-12 w-12 text-gold-soft" />
               )}
             </div>
-          </>
-        )}
+          )}
 
-        {/* Category Badge */}
-        <div className={`absolute top-4 right-4 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wider text-white shadow-sm ${
-          isHall ? 'bg-emerald-600/90' : 'bg-indigo-600/90'
-        }`}>
-          {isHall ? "Restoran" : "Bar"}
+          {/* Bottom scrim into card surface */}
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/45 to-transparent" />
+
+          {/* Category badge */}
+          <div className="absolute left-4 top-4">
+            <span className="badge-gold">
+              {isHall ? <Hotel className="h-3 w-3" /> : <Wine className="h-3 w-3" />}
+              {isHall ? 'To‘y zali' : 'Bar'}
+            </span>
+          </div>
+
+          {/* Verified pill */}
+          <div className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full border border-gold/50 bg-black/35 text-gold backdrop-blur-md transition-colors group-hover:bg-gold group-hover:text-espresso">
+            <BadgeCheck className="h-4 w-4" />
+          </div>
+
+          {/* Capacity chip on image bottom */}
+          <div className="absolute bottom-3 left-4 flex items-center gap-1.5 rounded-full bg-black/40 px-3 py-1 text-[11px] font-bold text-white backdrop-blur-md">
+            <Users className="h-3 w-3 text-gold-soft" />
+            {capacity} kishigacha
+          </div>
         </div>
-      </div>
 
-      {/* Card Info Details */}
-      <div className="flex flex-1 flex-col p-5">
-        <h3 className="text-lg font-bold text-slate-800 transition-colors group-hover:text-indigo-600 dark:text-slate-100 dark:group-hover:text-indigo-400">
-          {name}
-        </h3>
-        
-        <div className="mt-3 flex items-start gap-1.5 text-slate-500 dark:text-slate-400">
-          <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" />
-          <span className="text-sm line-clamp-1">{address}</span>
-        </div>
+        {/* Body */}
+        <div className="flex flex-col p-5">
+          <div className="flex items-start justify-between gap-3">
+            <h3 className="font-display text-xl font-bold leading-snug text-ink transition-colors group-hover:text-gold-strong">
+              {name}
+            </h3>
+            <span className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-line text-ink-faint transition-all duration-300 group-hover:border-gold group-hover:bg-gold group-hover:text-espresso">
+              <ArrowUpRight className="h-4 w-4" />
+            </span>
+          </div>
 
-        <div className="mt-4 grid grid-cols-2 gap-4 border-t border-slate-100 pt-4 dark:border-slate-800/60">
-          {/* Capacity Section */}
-          <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
-            <Users className="h-4 w-4 text-slate-400" />
-            <div className="text-xs">
-              <p className="text-slate-400">Sig'imi</p>
-              <p className="font-semibold">{capacity} kishi</p>
+          <div className="mt-2 flex items-center gap-1.5 text-[13px] text-ink-faint">
+            <MapPin className="h-3.5 w-3.5 shrink-0 text-gold" />
+            <span className="line-clamp-1">{address}</span>
+          </div>
+
+          <div className="mt-4 flex items-center justify-between border-t border-dashed border-line pt-4">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-ink-faint">
+                {isHall ? 'Narxlar' : 'Soatbay narx'}
+              </p>
+              <p className="mt-0.5 text-sm font-extrabold text-ink">{priceFormatted}</p>
             </div>
-          </div>
-
-          {/* Pricing Section */}
-          <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
-            <DollarSign className="h-4 w-4 text-slate-400" />
-            <div className="text-xs">
-              <p className="text-slate-400">Narxi</p>
-              <p className="font-bold text-slate-800 dark:text-slate-100 truncate max-w-[100px]">{isHall ? "Smeta bo'yicha" : priceFormatted}</p>
-            </div>
+            {isHall && (
+              <div className="text-right">
+                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-ink-faint">Zakalat</p>
+                <p className="mt-0.5 text-sm font-extrabold text-success">
+                  {parseFloat((venue as WeddingHall).required_deposit).toLocaleString('uz-UZ')} UZS
+                </p>
+              </div>
+            )}
           </div>
         </div>
-        
-        {isHall && (
-          <div className="mt-3 rounded-lg bg-emerald-50/50 p-2 text-center text-xs font-semibold text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-400 border border-emerald-500/10">
-            Kafolat summasi: {depositFormatted}
-          </div>
-        )}
       </div>
     </Link>
   );
 };
+
 export default VenueCard;

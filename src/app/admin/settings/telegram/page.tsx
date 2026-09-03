@@ -3,18 +3,18 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchBotConfigRequest, updateBotConfigRequest, TelegramBotConfig } from '@/services/admin';
-import { 
-  Bot, 
-  CheckCircle2, 
-  XCircle, 
-  Save, 
-  Link as LinkIcon, 
-  Info, 
-  Globe, 
-  RefreshCw, 
-  Eye, 
-  EyeOff, 
-  AlertCircle 
+import {
+  Bot,
+  CheckCircle2,
+  XCircle,
+  Save,
+  Link as LinkIcon,
+  Info,
+  Globe,
+  RefreshCw,
+  Eye,
+  EyeOff,
+  AlertCircle,
 } from 'lucide-react';
 
 export default function TelegramBotSettingsPage() {
@@ -22,20 +22,17 @@ export default function TelegramBotSettingsPage() {
   const [showToken, setShowToken] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
-  // Form states
   const [token, setToken] = useState('');
   const [name, setName] = useState('');
   const [shortDesc, setShortDesc] = useState('');
   const [desc, setDesc] = useState('');
   const [webhook, setWebhook] = useState('');
 
-  // Fetch bot config
   const { data: config, isLoading, error, refetch } = useQuery<TelegramBotConfig>({
     queryKey: ['telegramBotConfig'],
     queryFn: fetchBotConfigRequest,
   });
 
-  // Update inputs when data is fetched
   useEffect(() => {
     if (config) {
       setToken(config.bot_token || '');
@@ -46,21 +43,18 @@ export default function TelegramBotSettingsPage() {
     }
   }, [config]);
 
-  // Mutation to update and configure bot
   const updateMutation = useMutation({
     mutationFn: (updatedData: Partial<TelegramBotConfig>) => updateBotConfigRequest(updatedData),
     onSuccess: (data) => {
       queryClient.setQueryData(['telegramBotConfig'], data.config);
       setToast({ message: data.message, type: 'success' });
-      // Clear toast after 5 seconds
       setTimeout(() => setToast(null), 5000);
     },
     onError: (err: any) => {
-      const errMsg = err.response?.data?.message || err.message || "Botni sozlashda xatolik yuz berdi.";
+      const errMsg = err.response?.data?.message || err.message || 'Botni sozlashda xatolik yuz berdi.';
       setToast({ message: errMsg, type: 'error' });
-      // Clear toast after 7 seconds
       setTimeout(() => setToast(null), 7000);
-    }
+    },
   });
 
   const handleAutoDetectWebhook = () => {
@@ -83,94 +77,101 @@ export default function TelegramBotSettingsPage() {
       bot_name: name,
       short_description: shortDesc,
       description: desc,
-      webhook_url: webhook
+      webhook_url: webhook,
     });
   };
 
   return (
     <div className="flex flex-col flex-1 overflow-y-auto">
-      {/* Header bar */}
-      <header className="flex h-16 items-center justify-between border-b border-slate-200 bg-white px-8 dark:border-slate-800 dark:bg-slate-900 shrink-0">
-        <div className="flex items-center gap-2">
-          <Bot className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
-          <h2 className="text-lg font-bold text-slate-800 dark:text-white">Telegram Bot Sozlamalari</h2>
-        </div>
-        <button 
+      {/* Top header */}
+      <header className="flex h-16 shrink-0 items-center justify-between border-b border-line bg-paper-soft/90 px-8 backdrop-blur-md">
+        <h2 className="flex items-center gap-2.5 font-display text-lg font-bold text-ink">
+          <Bot className="h-5 w-5 text-gold" />
+          Telegram Bot Sozlamalari
+        </h2>
+        <button
           onClick={() => refetch()}
           disabled={isLoading}
-          className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800"
+          className="flex h-9 w-9 items-center justify-center rounded-full border border-line text-ink-soft transition-colors hover:border-gold/60 hover:text-gold-strong"
           title="Yangilash"
         >
           <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
         </button>
       </header>
 
-      <div className="p-8 space-y-6 flex-1 max-w-4xl w-full mx-auto">
-        {/* Toast Notification */}
+      <div className="mx-auto w-full max-w-4xl flex-1 space-y-6 p-8">
+        {/* Toast */}
         {toast && (
-          <div className={`flex items-start gap-3 rounded-xl p-4 border text-sm shadow-md transition-all ${
-            toast.type === 'success' 
-              ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400' 
-              : 'bg-rose-500/10 border-rose-500/20 text-rose-600 dark:text-rose-400'
-          }`}>
+          <div
+            className={`flex items-start gap-3 rounded-xl border p-4 text-sm font-semibold shadow-md ${
+              toast.type === 'success'
+                ? 'border-success/30 bg-success/10 text-success'
+                : 'border-danger/30 bg-danger/10 text-danger'
+            }`}
+          >
             {toast.type === 'success' ? (
-              <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-500" />
+              <CheckCircle2 className="h-5 w-5 shrink-0" />
             ) : (
-              <XCircle className="h-5 w-5 shrink-0 text-rose-500" />
+              <XCircle className="h-5 w-5 shrink-0" />
             )}
             <div className="flex-1">
-              <p className="font-semibold">{toast.type === 'success' ? 'Muvaffaqiyatli' : 'Xatolik'}</p>
-              <p className="mt-0.5">{toast.message}</p>
+              <p className="font-black">{toast.type === 'success' ? 'Muvaffaqiyatli' : 'Xatolik'}</p>
+              <p className="mt-0.5 font-medium">{toast.message}</p>
             </div>
           </div>
         )}
 
-        {/* Load Error */}
+        {/* Load error */}
         {error && (
-          <div className="flex items-center gap-2 rounded-xl bg-amber-500/10 p-3 text-sm text-amber-600 border border-amber-500/20">
+          <div className="flex items-center gap-2.5 rounded-xl border border-gold/40 bg-gold/10 p-4 text-sm font-semibold text-gold-strong">
             <AlertCircle className="h-5 w-5 shrink-0" />
             <span>Sozlamalarni yuklashda muammo yuz berdi. Sinov rejimida mock ma&apos;lumotlar yuklandi.</span>
           </div>
         )}
 
         {isLoading ? (
-          <div className="h-64 flex items-center justify-center">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent" />
+          <div className="card-lux flex h-64 items-center justify-center">
+            <span className="h-8 w-8 rotate-45 animate-spin rounded-sm border-2 border-gold border-t-transparent" />
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-6">
-            
-            {/* Status Card */}
-            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 transition-all">
-              <h3 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Ulanish Holati</h3>
-              <div className="mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            {/* Status card */}
+            <div className="card-lux p-6">
+              <h3 className="field-label">Ulanish holati</h3>
+              <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-4">
-                  <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${
-                    config?.is_active 
-                      ? 'bg-emerald-500/10 text-emerald-500 shadow-lg shadow-emerald-500/10' 
-                      : 'bg-rose-500/10 text-rose-500'
-                  }`}>
-                    <Bot className="h-6 w-6" />
-                  </div>
+                  <span
+                    className={`flex h-12 w-12 rotate-45 items-center justify-center border ${
+                      config?.is_active
+                        ? 'border-success/40 bg-success/10'
+                        : 'border-danger/40 bg-danger/10'
+                    }`}
+                  >
+                    <Bot
+                      className={`h-5 w-5 rotate-[-45deg] ${config?.is_active ? 'text-success' : 'text-danger'}`}
+                    />
+                  </span>
                   <div>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-bold text-slate-800 dark:text-white">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-display text-lg font-bold text-ink">
                         {config?.bot_name || "Noma'lum bot"}
                       </span>
-                      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${
-                        config?.is_active 
-                          ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' 
-                          : 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
-                      }`}>
-                        {config?.is_active ? 'Faol' : 'Faol emas / Sozlanmagan'}
+                      <span
+                        className={`inline-flex rounded-full border px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider ${
+                          config?.is_active
+                            ? 'border-success/40 bg-success/10 text-success'
+                            : 'border-danger/40 bg-danger/10 text-danger'
+                        }`}
+                      >
+                        {config?.is_active ? 'Faol' : 'Faol emas'}
                       </span>
                     </div>
                     {config?.bot_username && (
-                      <a 
+                      <a
                         href={`https://t.me/${config.bot_username}`}
                         target="_blank"
                         rel="noreferrer"
-                        className="text-sm text-indigo-600 hover:underline dark:text-indigo-400 font-medium block mt-0.5"
+                        className="mt-0.5 block text-sm font-bold text-gold-strong hover:underline"
                       >
                         @{config.bot_username}
                       </a>
@@ -178,70 +179,69 @@ export default function TelegramBotSettingsPage() {
                   </div>
                 </div>
                 {config?.updated_at && (
-                  <div className="text-xs text-slate-400 self-end sm:self-center">
+                  <div className="text-xs font-semibold text-ink-faint sm:self-center">
                     Oxirgi yangilanish: {new Date(config.updated_at).toLocaleString('uz-UZ')}
                   </div>
                 )}
               </div>
             </div>
 
-            {/* Config Form */}
-            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-              <div className="flex items-center gap-2 border-b border-slate-100 pb-4 dark:border-slate-800">
-                <Globe className="h-5 w-5 text-indigo-500" />
-                <h3 className="font-bold text-slate-800 dark:text-white">Bot Sozlamalari Formasi</h3>
+            {/* Config form */}
+            <div className="card-lux p-6 sm:p-8">
+              <div className="flex items-center gap-2.5 border-b border-dashed border-line pb-5">
+                <Globe className="h-5 w-5 text-gold" />
+                <h3 className="font-display text-lg font-bold text-ink">Bot sozlamalari</h3>
               </div>
 
-              <form onSubmit={handleSubmit} className="mt-6 space-y-6">
-                
-                {/* Bot Token */}
-                <div className="space-y-1.5">
-                  <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center justify-between">
-                    <span>Bot Tokeni</span>
-                    <span className="text-xs text-slate-400">Telegram @BotFather orqali olinadi</span>
+              <form onSubmit={handleSubmit} className="mt-6 space-y-5">
+                {/* Token */}
+                <div>
+                  <label className="flex items-center justify-between">
+                    <span className="field-label">Bot tokeni</span>
+                    <span className="text-[11px] font-semibold text-ink-faint">
+                      Telegram @BotFather orqali olinadi
+                    </span>
                   </label>
-                  <div className="relative rounded-lg shadow-sm">
+                  <div className="relative mt-2">
                     <input
                       type={showToken ? 'text' : 'password'}
                       value={token}
                       onChange={(e) => setToken(e.target.value)}
-                      placeholder="Masalan: 1234567890:ABCdefGhIJKlmNoPQRsTUVwxyZ"
-                      className="block w-full rounded-xl border border-slate-200 bg-transparent py-3 pl-4 pr-12 text-sm text-slate-800 placeholder-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-800 dark:text-slate-100"
+                      placeholder="1234567890:ABCdefGhIJKlmNoPQRsTUVwxyZ"
+                      className="input-lux !py-3 pr-12"
                       required
                     />
                     <button
                       type="button"
                       onClick={() => setShowToken(!showToken)}
-                      className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600"
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-ink-faint transition-colors hover:text-gold-strong"
                     >
-                      {showToken ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                      {showToken ? <EyeOff className="h-4.5 w-4.5" /> : <Eye className="h-4.5 w-4.5" />}
                     </button>
                   </div>
                 </div>
 
-                {/* Bot Name & Webhook URL */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-1.5">
-                    <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                      Botning Ko&apos;rinadigan Nomi
-                    </label>
+                {/* Name + Webhook */}
+                <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                  <div>
+                    <label className="field-label">Botning ko&apos;rinadigan nomi</label>
                     <input
                       type="text"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       placeholder="Restoran Admin Bot"
-                      className="block w-full rounded-xl border border-slate-200 bg-transparent py-3 px-4 text-sm text-slate-800 placeholder-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-800 dark:text-slate-100"
+                      className="input-lux mt-2 !py-3"
                       required
                     />
                   </div>
 
-                  <div className="space-y-1.5">
-                    <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center justify-between">
-                      <span>Webhook URL</span>
-                      <button 
+                  <div>
+                    <label className="flex items-center justify-between">
+                      <span className="field-label">Webhook URL</span>
+                      <button
                         type="button"
                         onClick={handleAutoDetectWebhook}
-                        className="text-xs text-indigo-600 hover:underline dark:text-indigo-400 flex items-center gap-1 font-medium"
+                        className="flex items-center gap-1 text-[11px] font-extrabold text-gold-strong hover:underline"
                       >
                         <LinkIcon className="h-3 w-3" />
                         Avto-aniqlash
@@ -252,47 +252,38 @@ export default function TelegramBotSettingsPage() {
                       value={webhook}
                       onChange={(e) => setWebhook(e.target.value)}
                       placeholder="https://site.uz/api/v1/notifications/webhook/"
-                      className="block w-full rounded-xl border border-slate-200 bg-transparent py-3 px-4 text-sm text-slate-800 placeholder-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-800 dark:text-slate-100"
+                      className="input-lux mt-2 !py-3"
                     />
                   </div>
                 </div>
 
-                {/* Short Description */}
-                <div className="space-y-1.5">
-                  <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                    Qisqa Tavsif (Short Description)
-                  </label>
+                {/* Short description */}
+                <div>
+                  <label className="field-label">Qisqa tavsif</label>
                   <input
                     type="text"
                     value={shortDesc}
                     onChange={(e) => setShortDesc(e.target.value)}
                     placeholder="Bot ochilganda ko'rinadigan qisqa matn (max 120 belgi)"
                     maxLength={120}
-                    className="block w-full rounded-xl border border-slate-200 bg-transparent py-3 px-4 text-sm text-slate-800 placeholder-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-800 dark:text-slate-100"
+                    className="input-lux mt-2 !py-3"
                   />
                 </div>
 
                 {/* Description */}
-                <div className="space-y-1.5">
-                  <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                    To&apos;liq Ma&apos;lumot (Description)
-                  </label>
+                <div>
+                  <label className="field-label">To&apos;liq ma&apos;lumot</label>
                   <textarea
                     value={desc}
                     onChange={(e) => setDesc(e.target.value)}
                     placeholder="Botning 'About' bo'limida ko'rinadigan batafsil tavsif matni"
                     rows={4}
-                    className="block w-full rounded-xl border border-slate-200 bg-transparent py-3 px-4 text-sm text-slate-800 placeholder-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-800 dark:text-slate-100"
+                    className="input-lux mt-2 !py-3"
                   />
                 </div>
 
-                {/* Submit button */}
-                <div className="flex justify-end pt-4">
-                  <button
-                    type="submit"
-                    disabled={updateMutation.isPending}
-                    className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-600/20 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 transition-all"
-                  >
+                <div className="flex justify-end pt-2">
+                  <button type="submit" disabled={updateMutation.isPending} className="btn-gold">
                     {updateMutation.isPending ? (
                       <>
                         <RefreshCw className="h-4 w-4 animate-spin" />
@@ -301,25 +292,44 @@ export default function TelegramBotSettingsPage() {
                     ) : (
                       <>
                         <Save className="h-4 w-4" />
-                        <span>Saqlash va Botni ishga tushirish</span>
+                        <span>Saqlash va ishga tushirish</span>
                       </>
                     )}
                   </button>
                 </div>
               </form>
             </div>
-            
+
             {/* Info notice */}
-            <div className="rounded-2xl bg-slate-100 p-5 dark:bg-slate-800/40 flex items-start gap-3">
-              <Info className="h-5 w-5 text-indigo-500 shrink-0 mt-0.5" />
-              <div className="text-xs text-slate-500 dark:text-slate-400 space-y-1">
-                <p className="font-semibold text-slate-700 dark:text-slate-300">Telegram Botni Sozlash Bo&apos;yicha Yo&apos;riqnoma:</p>
-                <p>1. Telegramda <a href="https://t.me/BotFather" target="_blank" rel="noreferrer" className="text-indigo-600 hover:underline dark:text-indigo-400">@BotFather</a> orqali yangi bot yarating va olingan API Tokenni kiritib saqlang.</p>
-                <p>2. Token saqlanganda backend Telegram API bilan bog&apos;lanib, bot ismini, tavsiflarini, menyu buyruqlarini va Webhook URL manzilingizni avtomatik ravishda konfiguratsiya qiladi.</p>
-                <p>3. Webhook muvaffaqiyatli ulanishi uchun Webhook URL manzilingiz Telegram serverlari kirishi mumkin bo&apos;lgan ochiq HTTPS domen (yoki ngrok manzili) bo&apos;lishi shart.</p>
+            <div className="flex items-start gap-3 rounded-xl border border-gold/30 bg-gold-tint/60 p-5">
+              <Info className="mt-0.5 h-5 w-5 shrink-0 text-gold-strong" />
+              <div className="space-y-1.5 text-xs leading-relaxed text-ink-soft">
+                <p className="text-[13px] font-extrabold text-ink">
+                  Telegram botni sozlash bo&apos;yicha yo&apos;riqnoma:
+                </p>
+                <p>
+                  1. Telegramda{' '}
+                  <a
+                    href="https://t.me/BotFather"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="font-bold text-gold-strong hover:underline"
+                  >
+                    @BotFather
+                  </a>{' '}
+                  orqali yangi bot yarating va olingan API tokenni kiritib saqlang.
+                </p>
+                <p>
+                  2. Token saqlanganda backend Telegram API bilan bog&apos;lanib, bot ismini,
+                  tavsiflarini, menyu buyruqlarini va Webhook URL manzilingizni avtomatik
+                  konfiguratsiya qiladi.
+                </p>
+                <p>
+                  3. Webhook muvaffaqiyatli ulanishi uchun URL Telegram serverlari kirishi mumkin
+                  bo&apos;lgan ochiq HTTPS domen (yoki ngrok manzili) bo&apos;lishi shart.
+                </p>
               </div>
             </div>
-
           </div>
         )}
       </div>

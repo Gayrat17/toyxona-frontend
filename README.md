@@ -48,6 +48,20 @@ src/
 
 ---
 
+## 🎨 Design System — "Toyxona Luxe"
+
+The entire frontend was redesigned around a **premium cream & champagne-gold** identity:
+
+- **Palette tokens** (`src/app/globals.css`): warm paper (`--paper`, `--surface`), espresso ink (`--ink`, `--espresso`), champagne gold accents (`--gold`, `--gold-strong`, `--gold-tint`) + semantic colors (`--success`, `--wine`, `--danger`). Full dark theme included.
+- **Typography**: Playfair Display (display serif) + Manrope (sans) — self-hosted via `@fontsource-variable` (no network dependency at build time).
+- **Textures**: `.texture-grain` (film grain overlay), `.pattern-star` (Uzbek islimiy 8-point star lattice), `.pattern-weave` (fine fabric weave).
+- **Ornaments**: `.gold-text` (shimmering gold gradient text), `.hairline-b/t` (gold hairlines), `.frame-mat` (gallery double-mat frame), `.eyebrow` (small-caps labels), diamond-shaped ornaments.
+- **Components**: `.btn-gold / .btn-ink / .btn-outline / .btn-quiet` (with shine sweep), `.card-lux` (warm-shadow cards), `.input-lux / .select-lux / .field-label`, `.table-lux`, `.badge-gold / .badge-outline`, `.skeleton` shimmer, `.modal-pop` motion.
+- **Assets**: `public/images/hero-hall.jpg` (home hero), `public/images/auth-side.jpg` (login/register split screen).
+- **Theme toggle**: dark mode via `.dark` class with no-flash inline script in the root layout.
+
+---
+
 ## 🔑 Core Features & Setup
 
 ### Axios JWT Token Rotation Client (`src/services/api.ts`)

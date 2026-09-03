@@ -4,19 +4,74 @@ import React from 'react';
 import { useOwnerBookings } from '@/hooks/useOwnerBookings';
 import { SkeletonTableLoader } from '@/components/common/skeleton-loader';
 import { ErrorAlert } from '@/components/common/error-alert';
-import { Check, Clock, X } from 'lucide-react';
+import { Check, Clock, X, Hotel, Wine, Inbox } from 'lucide-react';
+
+function StatusPill({ status }: { status: string }) {
+  const map: Record<string, { label: string; cls: string }> = {
+    CONFIRMED: { label: 'Tasdiqlangan', cls: 'border-success/40 bg-success/10 text-success' },
+    REJECTED: { label: 'Rad etilgan', cls: 'border-danger/40 bg-danger/10 text-danger' },
+    HOLD: { label: 'Muzlatilgan', cls: 'border-gold/50 bg-gold/15 text-gold-strong' },
+    PENDING: { label: 'Kutilmoqda', cls: 'border-gold/50 bg-gold/15 text-gold-strong' },
+    CANCELLED: { label: 'Bekor qilingan', cls: 'border-line-strong bg-surface-2 text-ink-faint' },
+  };
+  const item = map[status] || { label: status, cls: 'border-line-strong bg-surface-2 text-ink-faint' };
+  return (
+    <span className={`inline-flex rounded-full border px-3 py-1 text-[11px] font-black uppercase tracking-wider ${item.cls}`}>
+      {item.label}
+    </span>
+  );
+}
+
+function DepositPill({ paid }: { paid: boolean }) {
+  return (
+    <span
+      className={`inline-flex rounded-full border px-3 py-1 text-[11px] font-black uppercase tracking-wider ${
+        paid ? 'border-success/40 bg-success/10 text-success' : 'border-gold/50 bg-gold/15 text-gold-strong'
+      }`}
+    >
+      {paid ? "To'langan" : "To'lanmagan"}
+    </span>
+  );
+}
+
+function ActionButton({
+  onClick,
+  title,
+  tone,
+  icon: Icon,
+}: {
+  onClick: () => void;
+  title: string;
+  tone: 'success' | 'gold' | 'danger';
+  icon: any;
+}) {
+  const tones = {
+    success: 'border-success/40 text-success hover:bg-success hover:text-white',
+    gold: 'border-gold/50 text-gold-strong hover:bg-gold hover:text-white',
+    danger: 'border-danger/40 text-danger hover:bg-danger hover:text-white',
+  };
+  return (
+    <button
+      onClick={onClick}
+      title={title}
+      className={`flex h-8 w-8 items-center justify-center rounded-full border bg-transparent transition-all ${tones[tone]}`}
+    >
+      <Icon className="h-3.5 w-3.5" />
+    </button>
+  );
+}
 
 export default function OwnerBookingsPage() {
-  const { 
-    hallBookings, 
-    barBookings, 
-    isLoading, 
-    isError, 
-    error, 
-    updateHallBookingStatus, 
-    updateBarBookingStatus, 
-    refetchHallBookings, 
-    refetchBarBookings 
+  const {
+    hallBookings,
+    barBookings,
+    isLoading,
+    isError,
+    error,
+    updateHallBookingStatus,
+    updateBarBookingStatus,
+    refetchHallBookings,
+    refetchBarBookings,
   } = useOwnerBookings();
 
   if (isLoading) {
@@ -25,78 +80,74 @@ export default function OwnerBookingsPage() {
 
   if (isError) {
     return (
-      <ErrorAlert 
-        message={error instanceof Error ? error.message : "Bronlar ro'yxatini yuklashda xatolik yuz berdi."} 
-        onRetry={() => { refetchHallBookings(); refetchBarBookings(); }} 
+      <ErrorAlert
+        message={error instanceof Error ? error.message : "Bronlar ro'yxatini yuklashda xatolik yuz berdi."}
+        onRetry={() => {
+          refetchHallBookings();
+          refetchBarBookings();
+        }}
       />
     );
   }
 
   return (
     <div className="space-y-8">
-      
-      {/* Hall Bookings table */}
-      <div>
-        <h3 className="text-base font-bold text-slate-800 dark:text-white mb-4">Restoranga olingan bronlar ({hallBookings.length})</h3>
+      {/* Hall bookings */}
+      <div className="card-lux overflow-hidden">
+        <div className="flex items-center justify-between border-b border-line bg-surface-2/50 px-6 py-4">
+          <h3 className="flex items-center gap-2.5 font-display text-base font-bold text-ink">
+            <Hotel className="h-5 w-5 text-gold" />
+            To&apos;y zaliga kelgan bronlar
+          </h3>
+          <span className="badge-outline">{hallBookings.length} ta</span>
+        </div>
+
         {hallBookings.length > 0 ? (
-          <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-800 text-left text-sm text-slate-500 dark:text-slate-400">
-              <thead className="bg-slate-50 dark:bg-slate-800/50 text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">
+          <div className="overflow-x-auto">
+            <table className="table-lux">
+              <thead>
                 <tr>
-                  <th className="px-6 py-4">Mijoz</th>
-                  <th className="px-6 py-4">Sana</th>
-                  <th className="px-6 py-4">Jami Narx</th>
-                  <th className="px-6 py-4">Zakalat holati</th>
-                  <th className="px-6 py-4">Status</th>
-                  <th className="px-6 py-4">Amallar</th>
+                  <th>Mijoz</th>
+                  <th>Sana</th>
+                  <th>Jami narx</th>
+                  <th>Zakalat</th>
+                  <th>Status</th>
+                  <th>Amallar</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+              <tbody>
                 {hallBookings.map((b) => (
                   <tr key={`hb-${b.id}`}>
-                    <td className="px-6 py-4 font-semibold text-slate-800 dark:text-white">
-                      {b.user_phone || "Mijoz"}
+                    <td className="font-extrabold text-ink">{b.user_phone || 'Mijoz'}</td>
+                    <td>{b.date}</td>
+                    <td className="font-bold text-gold-strong">{parseFloat(b.total_price).toLocaleString('uz-UZ')} UZS</td>
+                    <td>
+                      <DepositPill paid={b.is_deposit_paid} />
                     </td>
-                    <td className="px-6 py-4">{b.date}</td>
-                    <td className="px-6 py-4">{parseFloat(b.total_price).toLocaleString()} UZS</td>
-                    <td className="px-6 py-4">
-                      <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
-                        b.is_deposit_paid ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
-                      }`}>
-                        {b.is_deposit_paid ? "To'langan" : "To'lanmagan"}
-                      </span>
+                    <td>
+                      <StatusPill status={b.status} />
                     </td>
-                    <td className="px-6 py-4">
-                      <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${
-                        b.status === 'CONFIRMED' ? 'bg-emerald-100 text-emerald-800' :
-                        b.status === 'REJECTED' ? 'bg-rose-100 text-rose-800' :
-                        b.status === 'HOLD' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-800'
-                      }`}>
-                        {b.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 flex gap-2">
-                      <button
-                        onClick={() => updateHallBookingStatus({ id: b.id, status: 'CONFIRMED' })}
-                        className="rounded p-1.5 bg-emerald-50 text-emerald-600 hover:bg-emerald-100"
-                        title="Tasdiqlash"
-                      >
-                        <Check className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => updateHallBookingStatus({ id: b.id, status: 'HOLD' })}
-                        className="rounded p-1.5 bg-amber-50 text-amber-600 hover:bg-amber-100"
-                        title="Muzlatish"
-                      >
-                        <Clock className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => updateHallBookingStatus({ id: b.id, status: 'REJECTED' })}
-                        className="rounded p-1.5 bg-rose-50 text-rose-600 hover:bg-rose-100"
-                        title="Rad etish"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
+                    <td>
+                      <div className="flex gap-2">
+                        <ActionButton
+                          onClick={() => updateHallBookingStatus({ id: b.id, status: 'CONFIRMED' })}
+                          title="Tasdiqlash"
+                          tone="success"
+                          icon={Check}
+                        />
+                        <ActionButton
+                          onClick={() => updateHallBookingStatus({ id: b.id, status: 'HOLD' })}
+                          title="Muzlatish"
+                          tone="gold"
+                          icon={Clock}
+                        />
+                        <ActionButton
+                          onClick={() => updateHallBookingStatus({ id: b.id, status: 'REJECTED' })}
+                          title="Rad etish"
+                          tone="danger"
+                          icon={X}
+                        />
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -104,66 +155,71 @@ export default function OwnerBookingsPage() {
             </table>
           </div>
         ) : (
-          <p className="text-sm text-slate-400 italic">Restoranga kelib tushgan bronlar yo&apos;q.</p>
+          <div className="flex flex-col items-center px-6 py-12 text-center">
+            <Inbox className="h-8 w-8 text-ink-faint/50" />
+            <p className="mt-3 text-sm font-semibold italic text-ink-faint">
+              To&apos;y zaliga kelib tushgan bronlar yo&apos;q.
+            </p>
+          </div>
         )}
       </div>
 
-      {/* Bar Bookings table */}
-      <div className="pt-6 border-t border-slate-200 dark:border-slate-800">
-        <h3 className="text-base font-bold text-slate-800 dark:text-white mb-4">Barga olingan bronlar ({barBookings.length})</h3>
+      {/* Bar bookings */}
+      <div className="card-lux overflow-hidden">
+        <div className="flex items-center justify-between border-b border-line bg-surface-2/50 px-6 py-4">
+          <h3 className="flex items-center gap-2.5 font-display text-base font-bold text-ink">
+            <Wine className="h-5 w-5 text-gold" />
+            Barga kelgan bronlar
+          </h3>
+          <span className="badge-outline">{barBookings.length} ta</span>
+        </div>
+
         {barBookings.length > 0 ? (
-          <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-800 text-left text-sm text-slate-500 dark:text-slate-400">
-              <thead className="bg-slate-50 dark:bg-slate-800/50 text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">
+          <div className="overflow-x-auto">
+            <table className="table-lux">
+              <thead>
                 <tr>
-                  <th className="px-6 py-4">Mijoz</th>
-                  <th className="px-6 py-4">Sana</th>
-                  <th className="px-6 py-4">Vaqt</th>
-                  <th className="px-6 py-4">Jami Narx</th>
-                  <th className="px-6 py-4">Status</th>
-                  <th className="px-6 py-4">Amallar</th>
+                  <th>Mijoz</th>
+                  <th>Sana</th>
+                  <th>Vaqt</th>
+                  <th>Jami narx</th>
+                  <th>Status</th>
+                  <th>Amallar</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+              <tbody>
                 {barBookings.map((b) => (
                   <tr key={`bb-${b.id}`}>
-                    <td className="px-6 py-4 font-semibold text-slate-800 dark:text-white">
-                      {b.user_phone || "Mijoz"}
+                    <td className="font-extrabold text-ink">{b.user_phone || 'Mijoz'}</td>
+                    <td>{b.date}</td>
+                    <td>
+                      {b.start_time} — {b.end_time}
                     </td>
-                    <td className="px-6 py-4">{b.date}</td>
-                    <td className="px-6 py-4">{b.start_time} - {b.end_time}</td>
-                    <td className="px-6 py-4">{parseFloat(b.total_price).toLocaleString()} UZS</td>
-                    <td className="px-6 py-4">
-                      <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${
-                        b.status === 'CONFIRMED' ? 'bg-emerald-100 text-emerald-800' :
-                        b.status === 'REJECTED' ? 'bg-rose-100 text-rose-800' :
-                        b.status === 'HOLD' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-800'
-                      }`}>
-                        {b.status}
-                      </span>
+                    <td className="font-bold text-gold-strong">{parseFloat(b.total_price).toLocaleString('uz-UZ')} UZS</td>
+                    <td>
+                      <StatusPill status={b.status} />
                     </td>
-                    <td className="px-6 py-4 flex gap-2">
-                      <button
-                        onClick={() => updateBarBookingStatus({ id: b.id, status: 'CONFIRMED' })}
-                        className="rounded p-1.5 bg-emerald-50 text-emerald-600 hover:bg-emerald-100"
-                        title="Tasdiqlash"
-                      >
-                        <Check className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => updateBarBookingStatus({ id: b.id, status: 'HOLD' })}
-                        className="rounded p-1.5 bg-amber-50 text-amber-600 hover:bg-amber-100"
-                        title="Muzlatish"
-                      >
-                        <Clock className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => updateBarBookingStatus({ id: b.id, status: 'REJECTED' })}
-                        className="rounded p-1.5 bg-rose-50 text-rose-600 hover:bg-rose-100"
-                        title="Rad etish"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
+                    <td>
+                      <div className="flex gap-2">
+                        <ActionButton
+                          onClick={() => updateBarBookingStatus({ id: b.id, status: 'CONFIRMED' })}
+                          title="Tasdiqlash"
+                          tone="success"
+                          icon={Check}
+                        />
+                        <ActionButton
+                          onClick={() => updateBarBookingStatus({ id: b.id, status: 'HOLD' })}
+                          title="Muzlatish"
+                          tone="gold"
+                          icon={Clock}
+                        />
+                        <ActionButton
+                          onClick={() => updateBarBookingStatus({ id: b.id, status: 'REJECTED' })}
+                          title="Rad etish"
+                          tone="danger"
+                          icon={X}
+                        />
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -171,10 +227,14 @@ export default function OwnerBookingsPage() {
             </table>
           </div>
         ) : (
-          <p className="text-sm text-slate-400 italic">Barga kelib tushgan bronlar yo&apos;q.</p>
+          <div className="flex flex-col items-center px-6 py-12 text-center">
+            <Inbox className="h-8 w-8 text-ink-faint/50" />
+            <p className="mt-3 text-sm font-semibold italic text-ink-faint">
+              Barga kelib tushgan bronlar yo&apos;q.
+            </p>
+          </div>
         )}
       </div>
-
     </div>
   );
 }
