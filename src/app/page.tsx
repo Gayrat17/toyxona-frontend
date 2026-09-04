@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import React, { useState, useEffect, Suspense } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { fetchHallsRequest, fetchBarsRequest, fetchRegionsRequest } from '@/services/venues';
 import { Header } from '@/components/layout/header';
@@ -31,20 +31,45 @@ function OrnamentDivider({ className = '' }: { className?: string }) {
 
 function HomeContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
 
-  const categoryParam = searchParams.get('category') || 'all';
+  const categoryParam = (searchParams.get('category') as 'all' | 'halls' | 'bars') || 'all';
 
   const [selectedRegion, setSelectedRegion] = useState('');
   const [selectedDistrict, setSelectedDistrict] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<'all' | 'halls' | 'bars'>('all');
+  const [selectedCategory, setSelectedCategory] = useState<'all' | 'halls' | 'bars'>(categoryParam);
   const [searchQuery, setSearchQuery] = useState('');
   const [minCapacity, setMinCapacity] = useState(0);
   const [selectedDate, setSelectedDate] = useState('');
 
+  // Sync category state when URL changes
+  useEffect(() => {
+    setSelectedCategory(categoryParam);
+  }, [categoryParam]);
+
+  const handleCategoryChange = (cat: 'all' | 'halls' | 'bars') => {
+    setSelectedCategory(cat);
+    const params = new URLSearchParams(searchParams.toString());
+    if (cat === 'all') {
+      params.delete('category');
+    } else {
+      params.set('category', cat);
+    }
+    const query = params.toString();
+    router.push(query ? `/?${query}` : '/', { scroll: false });
+  };
+
+  const handleSearchSubmit = () => {
+    const el = document.getElementById('katalog');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   const handleResetFilters = () => {
     setSelectedRegion('');
     setSelectedDistrict('');
-    setSelectedCategory('all');
+    handleCategoryChange('all');
     setSearchQuery('');
     setMinCapacity(0);
     setSelectedDate('');
@@ -56,7 +81,7 @@ function HomeContent() {
     staleTime: 0,
   });
 
-  const activeCategory = selectedCategory !== 'all' ? selectedCategory : categoryParam;
+  const activeCategory = selectedCategory;
 
   const filterParams: Record<string, string | number> = {};
   if (selectedRegion) filterParams.region = selectedRegion;
@@ -190,7 +215,7 @@ function HomeContent() {
           selectedDistrict={selectedDistrict}
           setSelectedDistrict={setSelectedDistrict}
           selectedCategory={selectedCategory}
-          setSelectedCategory={setSelectedCategory}
+          setSelectedCategory={handleCategoryChange}
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           minCapacity={minCapacity}
@@ -199,6 +224,7 @@ function HomeContent() {
           setSelectedDate={setSelectedDate}
           dbRegions={dbRegions}
           onResetFilters={handleResetFilters}
+          onSearchSubmit={handleSearchSubmit}
         />
       </section>
 

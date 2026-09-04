@@ -1,4 +1,5 @@
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const RAW_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+export const API_BASE_URL = RAW_URL.replace(/\/api(\/v\d+)?\/?$/, '');
 
 /**
  * Returns a fully qualified absolute URL for media files returned from Django REST Framework.
