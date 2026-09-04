@@ -1,113 +1,538 @@
 @import "tailwindcss";
 
-@variant dark (.dark &);
+@custom-variant dark (&:where(.dark, .dark *));
 
+/* ============================================================
+   TOYXONA LUXE — Design Tokens
+   Warm cream paper, espresso ink, champagne gold accents.
+   ============================================================ */
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
+  --font-playfair: 'Playfair Display Variable', 'Playfair Display', Georgia, 'Times New Roman', serif;
+  --font-manrope: 'Manrope Variable', 'Manrope', ui-sans-serif, system-ui, -apple-system, sans-serif;
+
+  --paper: #f6f0e4;
+  --paper-soft: #fbf7ec;
+  --surface: #fffdf6;
+  --surface-2: #f1e9d7;
+  --ink: #241c10;
+  --ink-soft: #5f523c;
+  --ink-faint: #93846a;
+  --line: #e5d9c0;
+  --line-strong: #d5c4a1;
+  --gold: #b08d4f;
+  --gold-strong: #96743d;
+  --gold-soft: #d9c391;
+  --gold-tint: #f3ead2;
+  --espresso: #221a0f;
+  --espresso-2: #2d2314;
+  --success: #3f6b50;
+  --wine: #7d3140;
+  --danger: #a53c3c;
+  --shadow-warm: 64, 48, 20;
 }
 
 .dark {
-  --background: #090d16;
-  --foreground: #f8fafc;
+  --paper: #16110a;
+  --paper-soft: #1c160d;
+  --surface: #211a10;
+  --surface-2: #2b2214;
+  --ink: #f2e9d6;
+  --ink-soft: #c6b89d;
+  --ink-faint: #93846a;
+  --line: #3b3120;
+  --line-strong: #4c3f2a;
+  --gold: #cda964;
+  --gold-strong: #e2c489;
+  --gold-soft: #a98a52;
+  --gold-tint: #2f2614;
+  --espresso: #100c06;
+  --espresso-2: #241c10;
+  --success: #85b493;
+  --wine: #cf8b98;
+  --danger: #de8b8b;
+  --shadow-warm: 0, 0, 0;
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-paper-soft: var(--paper-soft);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-faint: var(--ink-faint);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-gold: var(--gold);
+  --color-gold-strong: var(--gold-strong);
+  --color-gold-soft: var(--gold-soft);
+  --color-gold-tint: var(--gold-tint);
+  --color-espresso: var(--espresso);
+  --color-espresso-2: var(--espresso-2);
+  --color-success: var(--success);
+  --color-wine: var(--wine);
+  --color-danger: var(--danger);
+
+  --font-display: var(--font-playfair), "Georgia", serif;
+  --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  transition: background-color 0.25s ease, color 0.25s ease;
 }
 
-/* ==========================================
-   Multi-Color Animated Mesh Gradient (6 Blobs)
-   ========================================== */
-@keyframes blob-float-1 {
-  0%, 100% {
-    transform: translate(0px, 0px) scale(1) rotate(0deg);
-  }
-  33% {
-    transform: translate(140px, -80px) scale(1.35) rotate(120deg);
-  }
-  66% {
-    transform: translate(-70px, 90px) scale(0.85) rotate(240deg);
+::selection {
+  background: var(--gold);
+  color: #fff;
+}
+
+/* Slim luxe scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--gold) 45%, transparent);
+  border-radius: 999px;
+  border: 2px solid var(--paper);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--gold);
+}
+
+/* ============================================================
+   TEXTURES
+   ============================================================ */
+
+/* Fine film grain overlay — apply to any positioned section/panel */
+.texture-grain {
+  position: relative;
+  isolation: isolate;
+}
+.texture-grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.16;
+  mix-blend-mode: overlay;
+}
+
+/* Uzbek islimiy 8-point star lattice — gold ornament tile */
+.pattern-star {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='84' height='84' viewBox='0 0 84 84'%3E%3Cg fill='none' stroke='%23b08d4f' stroke-width='1' stroke-opacity='0.55'%3E%3Crect x='26' y='26' width='32' height='32'/%3E%3Crect x='26' y='26' width='32' height='32' transform='rotate(45 42 42)'/%3E%3Ccircle cx='42' cy='42' r='4.5'/%3E%3Ccircle cx='42' cy='42' r='1.4'/%3E%3Cpath d='M42 0v13M42 71v13M0 42h13M71 42h13'/%3E%3Cpath d='M0 0l9 9M84 0l-9 9M0 84l9-9M84 84l-9-9'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 84px 84px;
+}
+
+/* Fine diagonal weave — subtle fabric texture for light panels */
+.pattern-weave {
+  background-image: repeating-linear-gradient(
+      45deg,
+      rgba(150, 116, 61, 0.045) 0 1px,
+      transparent 1px 9px
+    ),
+    repeating-linear-gradient(-45deg, rgba(150, 116, 61, 0.045) 0 1px, transparent 1px 9px);
+}
+
+/* Gold gradient display text */
+.gold-text {
+  background: linear-gradient(115deg, #8a6a33 0%, #caa968 30%, #eed9a6 50%, #b08d4f 75%, #8a6a33 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* ============================================================
+   HAIRLINES & ORNAMENT HELPERS
+   ============================================================ */
+.hairline-b {
+  position: relative;
+}
+.hairline-b::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(176, 141, 79, 0.55), transparent);
+}
+.hairline-t::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(176, 141, 79, 0.55), transparent);
+}
+
+/* Double-mat frame like a gallery passe-partout */
+.frame-mat {
+  border: 1px solid var(--line-strong);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.65),
+    inset 0 0 0 5px var(--surface),
+    inset 0 0 0 6px color-mix(in srgb, var(--gold) 45%, transparent);
+}
+.dark .frame-mat {
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+    inset 0 0 0 5px var(--surface),
+    inset 0 0 0 6px color-mix(in srgb, var(--gold) 40%, transparent);
+}
+
+/* ============================================================
+   BUTTONS
+   ============================================================ */
+.btn-gold,
+.btn-ink,
+.btn-outline,
+.btn-quiet {
+  position: relative;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 9999px;
+  padding: 0.72rem 1.6rem;
+  font-weight: 800;
+  font-size: 0.85rem;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+}
+.btn-gold::after,
+.btn-ink::after {
+  content: "";
+  position: absolute;
+  top: -20%;
+  bottom: -20%;
+  width: 34%;
+  left: -60%;
+  background: linear-gradient(105deg, transparent, rgba(255, 255, 255, 0.45), transparent);
+  transform: skewX(-20deg);
+  transition: left 0.7s ease;
+  pointer-events: none;
+}
+.btn-gold:hover::after,
+.btn-ink:hover::after {
+  left: 140%;
+}
+
+.btn-gold {
+  color: #251b0c;
+  background: linear-gradient(165deg, #ecd49c 0%, #c9a35f 48%, #a37c3d 100%);
+  border: 1px solid rgba(125, 92, 40, 0.6);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    inset 0 -1px 0 rgba(90, 60, 20, 0.25),
+    0 12px 26px -12px rgba(150, 110, 50, 0.65);
+}
+.btn-gold:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.04);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    0 16px 32px -12px rgba(150, 110, 50, 0.75);
+}
+.btn-gold:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-ink {
+  color: #f2e9d6;
+  background: linear-gradient(165deg, #332817 0%, #221a0f 60%, #191207 100%);
+  border: 1px solid rgba(205, 169, 100, 0.4);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 12px 26px -14px rgba(25, 16, 5, 0.8);
+}
+.btn-ink:hover {
+  transform: translateY(-1px);
+  border-color: rgba(205, 169, 100, 0.75);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 16px 34px -14px rgba(25, 16, 5, 0.9);
+}
+
+.btn-outline {
+  color: var(--gold-strong);
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--gold) 65%, transparent);
+}
+.btn-outline:hover {
+  background: var(--gold-tint);
+  transform: translateY(-1px);
+}
+
+.btn-quiet {
+  color: var(--ink-soft);
+  background: transparent;
+  border: 1px solid transparent;
+}
+.btn-quiet:hover {
+  color: var(--ink);
+  background: var(--surface-2);
+}
+
+/* ============================================================
+   CARDS & PANELS
+   ============================================================ */
+.card-lux {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: 1.25rem;
+  box-shadow:
+    0 1px 2px rgba(var(--shadow-warm), 0.06),
+    0 18px 40px -24px rgba(var(--shadow-warm), 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+}
+.dark .card-lux {
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.4),
+    0 18px 40px -24px rgba(0, 0, 0, 0.7),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+.card-lux-hover:hover {
+  transform: translateY(-4px);
+  border-color: color-mix(in srgb, var(--gold) 55%, var(--line-strong));
+  box-shadow:
+    0 2px 4px rgba(var(--shadow-warm), 0.08),
+    0 28px 52px -24px rgba(var(--shadow-warm), 0.38);
+}
+
+.panel-dark {
+  background: linear-gradient(175deg, var(--espresso-2) 0%, var(--espresso) 70%);
+  color: #f2e9d6;
+  border: 1px solid rgba(205, 169, 100, 0.28);
+  border-radius: 1.25rem;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    0 26px 50px -28px rgba(18, 11, 3, 0.85);
+}
+
+/* ============================================================
+   FORM CONTROLS
+   ============================================================ */
+.input-lux,
+.select-lux {
+  width: 100%;
+  border-radius: 0.8rem;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 0.68rem 0.95rem;
+  box-shadow: inset 0 1px 2px rgba(var(--shadow-warm), 0.07);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
+}
+.input-lux::placeholder {
+  color: var(--ink-faint);
+  font-weight: 500;
+}
+.input-lux:focus,
+.select-lux:focus {
+  outline: none;
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3.5px color-mix(in srgb, var(--gold) 20%, transparent);
+}
+.select-lux {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5 11 1.5' fill='none' stroke='%2396743d' stroke-width='1.8' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.85rem center;
+  padding-right: 2.2rem;
+  cursor: pointer;
+}
+.select-lux:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.field-label {
+  display: block;
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+/* Eyebrow — small-caps gold label above headings */
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--gold-strong);
+}
+
+/* ============================================================
+   BADGES & PILLS
+   ============================================================ */
+.badge-gold {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 9999px;
+  padding: 0.3rem 0.75rem;
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #251b0c;
+  background: linear-gradient(165deg, #ecd49c, #c9a35f);
+  border: 1px solid rgba(125, 92, 40, 0.5);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+.badge-outline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 9999px;
+  padding: 0.28rem 0.7rem;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold-strong);
+  border: 1px solid color-mix(in srgb, var(--gold) 55%, transparent);
+  background: color-mix(in srgb, var(--gold-tint) 70%, transparent);
+}
+
+/* ============================================================
+   TABLES
+   ============================================================ */
+.table-lux {
+  width: 100%;
+  text-align: left;
+  font-size: 0.85rem;
+  border-collapse: collapse;
+}
+.table-lux thead th {
+  background: color-mix(in srgb, var(--gold-tint) 75%, transparent);
+  color: var(--ink-soft);
+  font-size: 0.66rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 0.9rem 1.4rem;
+  border-bottom: 1px solid var(--line-strong);
+  white-space: nowrap;
+}
+.table-lux tbody td {
+  padding: 1rem 1.4rem;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink-soft);
+  vertical-align: middle;
+}
+.table-lux tbody tr {
+  transition: background-color 0.15s ease;
+}
+.table-lux tbody tr:hover {
+  background: color-mix(in srgb, var(--gold-tint) 45%, transparent);
+}
+.table-lux tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* ============================================================
+   SKELETON SHIMMER
+   ============================================================ */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  border-radius: 0.75rem;
+  background: color-mix(in srgb, var(--line) 65%, transparent);
+}
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255, 253, 246, 0.55), transparent);
+  animation: shimmer 1.7s infinite;
+}
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
   }
 }
 
-@keyframes blob-float-2 {
-  0%, 100% {
-    transform: translate(0px, 0px) scale(1) rotate(0deg);
+/* ============================================================
+   MOTION
+   ============================================================ */
+@keyframes modal-pop {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.97);
   }
-  33% {
-    transform: translate(-120px, 100px) scale(1.3) rotate(-120deg);
-  }
-  66% {
-    transform: translate(100px, -70px) scale(0.9) rotate(-240deg);
+  to {
+    opacity: 1;
+    transform: none;
   }
 }
-
-@keyframes blob-float-3 {
-  0%, 100% {
-    transform: translate(0px, 0px) scale(1) rotate(0deg);
+.modal-pop {
+  animation: modal-pop 0.28s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+.fade-in-soft {
+  animation: fade-soft 0.3s ease-out both;
+}
+@keyframes fade-soft {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes kenburns {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.09);
+  }
+}
+.hero-zoom {
+  animation: kenburns 20s ease-in-out infinite alternate;
+}
+@keyframes float-soft {
+  0%,
+  100% {
+    transform: translateY(0) rotate(45deg);
   }
   50% {
-    transform: translate(130px, -120px) scale(1.4) rotate(180deg);
+    transform: translateY(-8px) rotate(45deg);
   }
 }
-
-@keyframes blob-float-4 {
-  0%, 100% {
-    transform: translate(0px, 0px) scale(1) rotate(0deg);
-  }
-  40% {
-    transform: translate(-110px, -90px) scale(1.25) rotate(-90deg);
-  }
-  80% {
-    transform: translate(80px, 60px) scale(0.95) rotate(180deg);
-  }
+.float-soft {
+  animation: float-soft 6s ease-in-out infinite;
 }
 
-@keyframes blob-float-5 {
-  0%, 100% {
-    transform: translate(0px, 0px) scale(1) rotate(0deg);
-  }
-  35% {
-    transform: translate(90px, 110px) scale(1.3) rotate(140deg);
-  }
-  70% {
-    transform: translate(-90px, -60px) scale(0.88) rotate(-140deg);
-  }
-}
-
-@keyframes blob-float-6 {
-  0%, 100% {
-    transform: translate(0px, 0px) scale(1) rotate(0deg);
-  }
-  50% {
-    transform: translate(-130px, 80px) scale(1.35) rotate(-180deg);
-  }
-}
-
-.animate-blob-1 {
-  animation: blob-float-1 8s ease-in-out infinite;
-}
-
-.animate-blob-2 {
-  animation: blob-float-2 10s ease-in-out infinite;
-}
-
-.animate-blob-3 {
-  animation: blob-float-3 7s ease-in-out infinite;
-}
-
-.animate-blob-4 {
-  animation: blob-float-4 9s ease-in-out infinite;
-}
-
-.animate-blob-5 {
-  animation: blob-float-5 11s ease-in-out infinite;
-}
-
-.animate-blob-6 {
-  animation: blob-float-6 8.5s ease-in-out infinite;
+/* Arch image mask — signature toyxona silhouette */
+.arch-top {
+  border-radius: 10rem 10rem 1rem 1rem;
 }

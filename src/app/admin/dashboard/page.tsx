@@ -5,137 +5,116 @@ import { Users, Hotel, Calendar, DollarSign, ArrowUpRight, TrendingUp } from 'lu
 
 const STATS_DATA = [
   {
-    name: "Jami foydalanuvchilar (Total Users)",
-    value: "1,248 kishi",
-    change: "+12.5%",
-    changeType: "positive",
+    name: 'Jami foydalanuvchilar',
+    value: '1,248',
+    change: '+12.5%',
     icon: Users,
-    color: "from-blue-500 to-indigo-600"
   },
   {
-    name: "Faol joylar (Active Venues)",
-    value: "84 ta",
-    change: "+8.2%",
-    changeType: "positive",
+    name: 'Faol joylar',
+    value: '84',
+    change: '+8.2%',
     icon: Hotel,
-    color: "from-emerald-500 to-teal-600"
   },
   {
-    name: "Oylik bronlar (Monthly Bookings)",
-    value: "312 ta",
-    change: "+24.1%",
-    changeType: "positive",
+    name: 'Oylik bronlar',
+    value: '312',
+    change: '+24.1%',
     icon: Calendar,
-    color: "from-purple-500 to-pink-600"
   },
   {
-    name: "Jami platforma aylanmasi (Revenue)",
-    value: "450,000,000 UZS",
-    change: "+18.7%",
-    changeType: "positive",
+    name: 'Platforma aylanmasi',
+    value: '450M UZS',
+    change: '+18.7%',
     icon: DollarSign,
-    color: "from-amber-500 to-orange-600"
-  }
+  },
 ];
 
 const MONTHLY_GROWTH = [
-  { month: "Mart", count: 120 },
-  { month: "Aprel", count: 180 },
-  { month: "May", count: 240 },
-  { month: "Iyun", count: 310 },
-  { month: "Iyul", count: 390 },
-  { month: "Avgust", count: 480 }
+  { month: 'Mart', count: 120 },
+  { month: 'Aprel', count: 180 },
+  { month: 'May', count: 240 },
+  { month: 'Iyun', count: 310 },
+  { month: 'Iyul', count: 390 },
+  { month: 'Avgust', count: 480 },
 ];
 
 export default function AdminDashboardPage() {
-  const maxCount = Math.max(...MONTHLY_GROWTH.map(d => d.count));
+  const maxCount = Math.max(...MONTHLY_GROWTH.map((d) => d.count));
 
   return (
     <div className="flex flex-col flex-1 overflow-y-auto">
-      
-      {/* Top Header bar */}
-      <header className="flex h-16 items-center justify-between border-b border-slate-200 bg-white px-8 dark:border-slate-800 dark:bg-slate-900">
-        <h2 className="text-lg font-bold text-slate-800 dark:text-white">Admin Dashboard Ko&apos;rinishi</h2>
-        <span className="rounded-full bg-rose-100 px-3 py-1 text-xs font-semibold text-rose-700">
-          Superadmin Panel
-        </span>
+      {/* Top header */}
+      <header className="flex h-16 shrink-0 items-center justify-between border-b border-line bg-paper-soft/90 px-8 backdrop-blur-md">
+        <h2 className="font-display text-lg font-bold text-ink">Admin Dashboard</h2>
+        <span className="badge-outline !border-wine/40 !bg-wine/10 !text-wine">Superadmin</span>
       </header>
 
-      {/* Grid Dashboard parameters */}
-      <div className="p-8 space-y-8 flex-1">
-        
-        {/* 4 Stats Cards */}
+      <div className="flex-1 space-y-8 p-8">
+        {/* Stats */}
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {STATS_DATA.map((stat, idx) => {
             const Icon = stat.icon;
             return (
-              <div 
-                key={`stat-${idx}`} 
-                className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 transition-all duration-300 hover:shadow-md"
-              >
+              <div key={`stat-${idx}`} className="card-lux card-lux-hover relative overflow-hidden p-6">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                  <span className="text-[10px] font-black uppercase tracking-[0.18em] text-ink-faint">
                     {stat.name}
                   </span>
-                  <div className={`rounded-xl bg-gradient-to-tr ${stat.color} p-2 text-white`}>
-                    <Icon className="h-5 w-5" />
-                  </div>
+                  <span className="flex h-10 w-10 rotate-45 items-center justify-center border border-gold/40 bg-gold-tint">
+                    <Icon className="h-4 w-4 rotate-[-45deg] text-gold-strong" />
+                  </span>
                 </div>
 
-                <div className="mt-4 flex items-baseline gap-2">
-                  <span className="text-2xl font-black text-slate-800 dark:text-white">{stat.value}</span>
-                  <span className="text-xs font-bold text-emerald-600 flex items-center gap-0.5">
+                <div className="mt-5 flex items-baseline gap-2.5">
+                  <span className="font-display text-3xl font-bold text-ink">{stat.value}</span>
+                  <span className="flex items-center gap-0.5 text-xs font-black text-success">
                     <ArrowUpRight className="h-3.5 w-3.5" /> {stat.change}
                   </span>
                 </div>
-                
-                {/* Visual subtle card bottom accent line */}
-                <div className={`absolute bottom-0 inset-x-0 h-1 bg-gradient-to-r ${stat.color}`} />
+
+                <span className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-transparent via-gold/70 to-transparent" />
               </div>
             );
           })}
         </div>
 
-        {/* Dynamic Growth SVG Chart */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-4 dark:border-slate-800">
-            <h3 className="text-base font-bold text-slate-800 dark:text-white flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-indigo-600" />
-              <span>Oylik buyurtmalar o&apos;sish grafigi (Bookings Growth)</span>
+        {/* Growth chart */}
+        <div className="card-lux p-6 sm:p-8">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-dashed border-line pb-5">
+            <h3 className="flex items-center gap-2.5 font-display text-lg font-bold text-ink">
+              <TrendingUp className="h-5 w-5 text-gold" />
+              <span>Oylik bronlar o&apos;sishi</span>
             </h3>
-            <span className="text-xs font-semibold text-slate-400">Oxirgi 6 oy ko&apos;rsatkichlari</span>
+            <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-ink-faint">
+              Oxirgi 6 oy
+            </span>
           </div>
 
-          {/* SVG Custom High-Fidelity Chart */}
-          <div className="mt-8 flex flex-col md:flex-row md:items-end justify-between gap-6 h-64 px-4">
+          <div className="mt-8 flex h-64 flex-col justify-between gap-6 px-2 md:flex-row md:items-end">
             {MONTHLY_GROWTH.map((data, index) => {
-              // Calculate dynamic heights percentages relative to max value
               const percent = (data.count / maxCount) * 100;
               return (
-                <div key={`chart-bar-${index}`} className="flex-1 flex flex-col items-center group">
-                  
-                  {/* Tooltip bubble showing values on hover */}
-                  <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-slate-800 text-white text-xs px-2.5 py-1 rounded-md mb-2 shadow-sm font-bold relative -top-1">
+                <div key={`chart-bar-${index}`} className="group flex flex-1 flex-col items-center">
+                  <div className="relative -top-1 mb-2 rounded-md border border-gold/30 bg-espresso px-2.5 py-1 text-[11px] font-black text-gold-soft opacity-0 shadow-md transition-opacity duration-200 group-hover:opacity-100">
                     {data.count} ta bron
                   </div>
 
-                  {/* Visual bar graph */}
-                  <div className="w-full max-w-[60px] rounded-t-xl bg-indigo-50 dark:bg-slate-800 h-48 relative flex items-end overflow-hidden border border-slate-100 dark:border-slate-800">
-                    <div 
+                  <div className="relative flex h-48 w-full max-w-[60px] items-end overflow-hidden rounded-t-xl border border-line bg-surface-2/60">
+                    <div
                       style={{ height: `${percent}%` }}
-                      className="w-full bg-gradient-to-t from-indigo-600 to-indigo-400 group-hover:from-indigo-500 group-hover:to-indigo-300 transition-all duration-500"
+                      className="w-full bg-gradient-to-t from-[#96743d] via-[#b08d4f] to-[#e2c489] transition-all duration-500 group-hover:brightness-110"
                     />
                   </div>
 
-                  {/* Month Label */}
-                  <span className="mt-3 text-xs font-semibold text-slate-500 dark:text-slate-400">{data.month}</span>
+                  <span className="mt-3 text-[11px] font-black uppercase tracking-[0.14em] text-ink-faint">
+                    {data.month}
+                  </span>
                 </div>
               );
             })}
           </div>
-
         </div>
-
       </div>
     </div>
   );

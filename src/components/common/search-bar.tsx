@@ -40,7 +40,6 @@ export function SearchBar({
   onResetFilters,
   onSearchSubmit,
 }: SearchBarProps) {
-  // Get districts for the selected region from database
   const selectedRegionObj = React.useMemo(() => {
     if (!selectedRegion || !dbRegions.length) return null;
     return dbRegions.find((r) => String(r.id) === selectedRegion) || null;
@@ -65,61 +64,44 @@ export function SearchBar({
     selectedRegion || selectedDistrict || searchQuery || minCapacity > 0 || selectedDate || selectedCategory !== 'all'
   );
 
+  const categoryTabs = [
+    { id: 'all' as const, label: 'Barchasi', icon: LayoutGrid },
+    { id: 'halls' as const, label: 'To‘y zallari', icon: Hotel },
+    { id: 'bars' as const, label: 'Barlar', icon: Wine },
+  ];
+
   return (
     <form onSubmit={handleSubmit} className="w-full">
-      <div className="rounded-3xl border border-slate-200/90 bg-white/95 p-5 shadow-2xl backdrop-blur-2xl dark:border-slate-800/90 dark:bg-slate-900/95 transition-all space-y-4">
-        
-        {/* Top Control Bar: Category Switcher & Filter Reset */}
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800/80 pb-3">
-          
-          {/* Category Tabs (Barchasi, Restoranlar, Barlar) */}
-          <div className="flex items-center gap-1.5 rounded-2xl bg-slate-100/90 p-1 dark:bg-slate-800/90">
-            <button
-              type="button"
-              onClick={() => setSelectedCategory('all')}
-              className={`flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-extrabold transition-all cursor-pointer ${
-                selectedCategory === 'all'
-                  ? 'bg-white text-indigo-600 shadow-sm dark:bg-slate-700 dark:text-indigo-400'
-                  : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white'
-              }`}
-            >
-              <LayoutGrid className="h-3.5 w-3.5" />
-              <span>Barchasi</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setSelectedCategory('halls')}
-              className={`flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-extrabold transition-all cursor-pointer ${
-                selectedCategory === 'halls'
-                  ? 'bg-white text-indigo-600 shadow-sm dark:bg-slate-700 dark:text-indigo-400'
-                  : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white'
-              }`}
-            >
-              <Hotel className="h-3.5 w-3.5 text-emerald-500" />
-              <span>Restoranlar</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setSelectedCategory('bars')}
-              className={`flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-extrabold transition-all cursor-pointer ${
-                selectedCategory === 'bars'
-                  ? 'bg-white text-pink-600 shadow-sm dark:bg-slate-700 dark:text-pink-400'
-                  : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white'
-              }`}
-            >
-              <Wine className="h-3.5 w-3.5 text-pink-500" />
-              <span>Barlar</span>
-            </button>
+      <div className="card-lux overflow-hidden">
+        {/* Concierge strip */}
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line bg-gold-tint/60 px-5 py-3.5">
+          <div className="flex items-center gap-1.5 rounded-full border border-line-strong bg-surface p-1">
+            {categoryTabs.map((tab) => {
+              const Icon = tab.icon;
+              const isActive = selectedCategory === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setSelectedCategory(tab.id)}
+                  className={`flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-extrabold transition-all ${
+                    isActive
+                      ? 'bg-gradient-to-br from-[#ecd49c] to-[#c9a35f] text-[#251b0c] shadow-[0_6px_14px_-6px_rgba(150,110,50,0.7)]'
+                      : 'text-ink-soft hover:text-ink'
+                  }`}
+                >
+                  <Icon className="h-3.5 w-3.5" />
+                  <span>{tab.label}</span>
+                </button>
+              );
+            })}
           </div>
 
-          {/* Reset Filters Button */}
           {hasActiveFilters && onResetFilters && (
             <button
               type="button"
               onClick={onResetFilters}
-              className="flex items-center gap-1 text-xs font-semibold text-rose-500 hover:text-rose-600 transition-colors bg-rose-50 dark:bg-rose-950/40 px-3 py-1.5 rounded-xl border border-rose-200 dark:border-rose-900/50 cursor-pointer"
+              className="flex items-center gap-1.5 rounded-full border border-danger/30 bg-danger/5 px-3.5 py-1.5 text-xs font-bold text-danger transition-colors hover:bg-danger/10"
             >
               <RotateCcw className="h-3.5 w-3.5" />
               <span>Filtrlarni tozalash</span>
@@ -127,107 +109,100 @@ export function SearchBar({
           )}
         </div>
 
-        {/* Main Grid Filters */}
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-12 lg:items-center">
-          
-          {/* Part 1: Joy yoki Manzil (Region, District & Text Search) */}
-          <div className="lg:col-span-5 border-b lg:border-b-0 lg:border-r border-slate-100 dark:border-slate-800/80 pb-3 lg:pb-0 lg:pr-4 space-y-2">
-            <label className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400">
-              <MapPin className="h-3.5 w-3.5 text-indigo-500 shrink-0" />
-              <span>Joy yoki Manzil (Viloyat va Tuman)</span>
+        {/* Filters */}
+        <div className="grid grid-cols-1 gap-5 px-5 py-5 lg:grid-cols-12 lg:items-end">
+          {/* Location + search text */}
+          <div className="space-y-2.5 lg:col-span-5">
+            <label className="field-label flex items-center gap-1.5">
+              <MapPin className="h-3.5 w-3.5 text-gold" />
+              <span>Joylashuv va nom</span>
             </label>
-
             <div className="grid grid-cols-2 gap-2">
-              {/* Region (Viloyat) Select — value is region ID */}
               <select
                 value={selectedRegion}
                 onChange={handleRegionChange}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50/80 py-2 px-2.5 text-xs font-semibold text-slate-800 focus:border-indigo-500 focus:bg-white focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                className="select-lux !py-2.5 !text-xs"
               >
                 <option value="">Barcha viloyatlar</option>
                 {dbRegions.map((region) => (
-                  <option key={`r-${region.id}`} value={String(region.id)}>{region.name}</option>
+                  <option key={`r-${region.id}`} value={String(region.id)}>
+                    {region.name}
+                  </option>
                 ))}
               </select>
-
-              {/* District (Tuman) Select — value is district ID */}
               <select
                 value={selectedDistrict}
                 disabled={!selectedRegion}
                 onChange={(e) => setSelectedDistrict(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50/80 py-2 px-2.5 text-xs font-semibold text-slate-800 focus:border-indigo-500 focus:bg-white focus:outline-none disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                className="select-lux !py-2.5 !text-xs"
               >
                 <option value="">Barcha tumanlar</option>
                 {districts.map((dist) => (
-                  <option key={`d-${dist.id}`} value={String(dist.id)}>{dist.name}</option>
+                  <option key={`d-${dist.id}`} value={String(dist.id)}>
+                    {dist.name}
+                  </option>
                 ))}
               </select>
             </div>
-
-            {/* Qidiruv Input (Nomi bo'yicha) */}
             <div className="relative flex items-center">
-              <Search className="absolute left-3 h-4 w-4 text-slate-400 shrink-0" />
+              <Search className="absolute left-3.5 h-4 w-4 text-gold" />
               <input
                 type="text"
-                placeholder="Qaysi restoran yoki barni qidiryapsiz?"
+                placeholder="Qaysi zallarni qidiryapsiz?"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full rounded-xl border border-slate-200/80 bg-slate-50/50 py-2 pl-9 pr-3 text-xs font-semibold text-slate-800 placeholder-slate-400 focus:border-indigo-500 focus:bg-white focus:outline-none dark:border-slate-700/80 dark:bg-slate-800/50 dark:text-slate-100"
+                className="input-lux !py-2.5 pl-10 !text-xs"
               />
             </div>
           </div>
 
-          {/* Part 2: Minimal Sig'im (Slider) */}
-          <div className="lg:col-span-3 border-b lg:border-b-0 lg:border-r border-slate-100 dark:border-slate-800/80 pb-3 lg:pb-0 lg:px-4">
+          {/* Capacity */}
+          <div className="lg:col-span-3">
             <div className="flex items-center justify-between">
-              <label className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                <Users className="h-3.5 w-3.5 text-indigo-500 shrink-0" />
-                <span>Minimal Sig&apos;im</span>
+              <label className="field-label flex items-center gap-1.5">
+                <Users className="h-3.5 w-3.5 text-gold" />
+                <span>Minimal sig‘im</span>
               </label>
-              <span className="text-xs font-extrabold text-indigo-600 dark:text-indigo-400">
-                {minCapacity === 0 ? "Barchasi" : `${minCapacity} kishi`}
+              <span className="text-xs font-extrabold text-gold-strong">
+                {minCapacity === 0 ? 'Barchasi' : `${minCapacity} kishi`}
               </span>
             </div>
-            <div className="mt-3 flex items-center gap-3">
-              <input
-                type="range"
-                min="0"
-                max="500"
-                step="50"
-                value={minCapacity}
-                onChange={(e) => setMinCapacity(parseInt(e.target.value))}
-                className="h-2 w-full cursor-pointer appearance-none rounded-lg bg-slate-200 dark:bg-slate-700 accent-indigo-600"
-              />
+            <input
+              type="range"
+              min="0"
+              max="500"
+              step="50"
+              value={minCapacity}
+              onChange={(e) => setMinCapacity(parseInt(e.target.value))}
+              className="mt-4 h-1.5 w-full cursor-pointer appearance-none rounded-full bg-line-strong accent-[var(--gold)]"
+            />
+            <div className="mt-1 flex justify-between text-[10px] font-bold text-ink-faint">
+              <span>0</span>
+              <span>500+</span>
             </div>
           </div>
 
-          {/* Part 3: Qachonga (Date Picker) */}
-          <div className="lg:col-span-2 border-b lg:border-b-0 border-slate-100 dark:border-slate-800/80 pb-3 lg:pb-0 lg:px-4">
-            <label className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400">
-              <Calendar className="h-3.5 w-3.5 text-indigo-500 shrink-0" />
-              <span>Tadbir Sanasi</span>
+          {/* Date */}
+          <div className="lg:col-span-2">
+            <label className="field-label mb-2.5 flex items-center gap-1.5">
+              <Calendar className="h-3.5 w-3.5 text-gold" />
+              <span>Tadbir sanasi</span>
             </label>
-            <div className="relative mt-2 flex items-center">
-              <input
-                type="date"
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
-                className="w-full rounded-xl border border-slate-200/80 bg-slate-50/80 py-2 px-3 text-xs font-semibold text-slate-800 focus:border-indigo-500 focus:bg-white focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-              />
-            </div>
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              className="input-lux !py-2.5 !text-xs"
+            />
           </div>
 
-          {/* Action Button: Qidirish */}
-          <div className="lg:col-span-2 flex justify-end">
-            <button
-              type="submit"
-              className="w-full h-11 px-5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-lg shadow-indigo-600/30 transition-all flex items-center justify-center gap-2 group cursor-pointer"
-            >
+          {/* Submit */}
+          <div className="lg:col-span-2">
+            <button type="submit" className="btn-gold w-full">
               <span>Qidirish</span>
-              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+              <ArrowRight className="h-4 w-4" />
             </button>
           </div>
-
         </div>
       </div>
     </form>

@@ -28,10 +28,10 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowe
   // Loading animation spinner
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-slate-50 dark:bg-slate-900">
-        <div className="flex flex-col items-center gap-3">
-          <div className="h-10 w-10 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent"></div>
-          <p className="text-sm font-medium text-slate-500">Yuklanmoqda...</p>
+      <div className="flex h-screen items-center justify-center bg-paper">
+        <div className="flex flex-col items-center gap-4">
+          <span className="h-10 w-10 rotate-45 animate-spin rounded-sm border-2 border-gold border-t-transparent" />
+          <p className="text-xs font-extrabold uppercase tracking-[0.25em] text-ink-faint">Yuklanmoqda...</p>
         </div>
       </div>
     );

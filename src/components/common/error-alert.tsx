@@ -6,25 +6,24 @@ interface ErrorAlertProps {
   onRetry?: () => void;
 }
 
-export const ErrorAlert: React.FC<ErrorAlertProps> = ({ 
-  message = "Ma'lumotlarni yuklashda xatolik yuz berdi. Iltimos, server ishlayotganini tekshiring.", 
-  onRetry 
+export const ErrorAlert: React.FC<ErrorAlertProps> = ({
+  message = "Ma'lumotlarni yuklashda xatolik yuz berdi. Iltimos, server ishlayotganini tekshiring.",
+  onRetry,
 }) => {
   return (
-    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-2xl border border-rose-500/20 bg-rose-500/10 p-5 text-rose-600 dark:text-rose-400">
+    <div className="flex flex-col items-start justify-between gap-4 rounded-2xl border border-danger/30 bg-danger/5 p-5 sm:flex-row sm:items-center">
       <div className="flex items-center gap-3">
-        <AlertCircle className="h-6 w-6 shrink-0 text-rose-500" />
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-danger/40 bg-danger/10">
+          <AlertCircle className="h-5 w-5 text-danger" />
+        </span>
         <div>
-          <h4 className="font-bold text-sm">Xatolik yuz berdi</h4>
-          <p className="text-xs opacity-90 mt-0.5">{message}</p>
+          <h4 className="text-sm font-extrabold text-ink">Xatolik yuz berdi</h4>
+          <p className="mt-0.5 text-xs text-ink-soft">{message}</p>
         </div>
       </div>
 
       {onRetry && (
-        <button
-          onClick={onRetry}
-          className="flex items-center gap-1.5 rounded-xl bg-rose-600 px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-rose-500 shadow-sm"
-        >
+        <button onClick={onRetry} className="btn-outline !py-2 !text-xs">
           <RefreshCw className="h-3.5 w-3.5" />
           <span>Qayta urinish</span>
         </button>
