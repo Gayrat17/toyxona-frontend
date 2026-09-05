@@ -1,11 +1,17 @@
 'use client';
 
 import React from 'react';
+import { getErrorMessage } from '@/utils/errors';
+import { ErrorAlert } from '@/components/common/error-alert';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { fetchAdminHallsRequest, fetchAdminBarsRequest, approveVenueRequest } from '@/services/admin';
-import { Check, X, RefreshCw, AlertCircle, Hotel, Wine } from 'lucide-react';
+import {
+  fetchAdminHallsRequest,
+  fetchAdminBarsRequest,
+  approveVenueRequest,
+} from '@/services/admin';
+import { Check, X, RefreshCw, Hotel, Wine } from 'lucide-react';
 
-function ApprovalPill({ approved }: { approved: boolean }) {
+function ApprovalPill({ approved }: { approved?: boolean }) {
   return (
     <span
       className={`inline-flex rounded-full border px-3 py-1 text-[11px] font-black uppercase tracking-wider ${
@@ -14,7 +20,11 @@ function ApprovalPill({ approved }: { approved: boolean }) {
           : 'border-gold/50 bg-gold/15 text-gold-strong'
       }`}
     >
-      {approved ? 'Tasdiqlangan' : 'Kutilmoqda'}
+      {approved === undefined
+        ? 'Holati noma’lum'
+        : approved
+          ? 'Tasdiqlangan'
+          : 'Tasdiqlanmagan'}
     </span>
   );
 }
@@ -22,19 +32,34 @@ function ApprovalPill({ approved }: { approved: boolean }) {
 export default function AdminVenuesPage() {
   const queryClient = useQueryClient();
 
-  const { data: halls = [], isLoading: loadingHalls, error: errorHalls } = useQuery({
+  const {
+    data: halls = [],
+    isLoading: loadingHalls,
+    error: errorHalls,
+  } = useQuery({
     queryKey: ['adminHalls'],
     queryFn: fetchAdminHallsRequest,
   });
 
-  const { data: bars = [], isLoading: loadingBars, error: errorBars } = useQuery({
+  const {
+    data: bars = [],
+    isLoading: loadingBars,
+    error: errorBars,
+  } = useQuery({
     queryKey: ['adminBars'],
     queryFn: fetchAdminBarsRequest,
   });
 
   const approveMutation = useMutation({
-    mutationFn: ({ id, type, approved }: { id: number; type: 'hall' | 'bar'; approved: boolean }) =>
-      approveVenueRequest(id, type, approved),
+    mutationFn: ({
+      id,
+      type,
+      approved,
+    }: {
+      id: number;
+      type: 'hall' | 'bar';
+      approved: boolean;
+    }) => approveVenueRequest(id, type, approved),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['adminHalls'] });
       queryClient.invalidateQueries({ queryKey: ['adminBars'] });
@@ -44,33 +69,52 @@ export default function AdminVenuesPage() {
   const isLoading = loadingHalls || loadingBars;
 
   return (
-    <div className="flex flex-col flex-1 overflow-y-auto">
-      {/* Top header */}
-      <header className="flex h-16 shrink-0 items-center justify-between border-b border-line bg-paper-soft/90 px-8 backdrop-blur-md">
-        <h2 className="font-display text-lg font-bold text-ink">Joylar tasdig&apos;i va boshqaruvi</h2>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-sm text-ink-soft">
+          Joylarni ko‘rib chiqing va e’lonlarni tasdiqlang.
+        </p>
         <button
+          type="button"
+          aria-label="Yangilash"
           onClick={() => {
-            queryClient.invalidateQueries({ queryKey: ['adminHalls'] });
-            queryClient.invalidateQueries({ queryKey: ['adminBars'] });
+            void queryClient.invalidateQueries({ queryKey: ['adminHalls'] });
+            void queryClient.invalidateQueries({ queryKey: ['adminBars'] });
           }}
-          className="flex h-9 w-9 items-center justify-center rounded-full border border-line text-ink-soft transition-colors hover:border-gold/60 hover:text-gold-strong"
-          title="Yangilash"
+          className="btn-outline !px-3 !py-2"
         >
           <RefreshCw className="h-4 w-4" />
         </button>
-      </header>
-
-      <div className="flex-1 space-y-8 p-8">
+      </div>
+      <div className="space-y-8">
         {(errorHalls || errorBars) && (
-          <div className="flex items-center gap-2.5 rounded-xl border border-danger/30 bg-danger/5 p-4 text-sm font-semibold text-danger">
-            <AlertCircle className="h-5 w-5 shrink-0" />
-            <span>
-              Joy ma&apos;lumotlarini yuklashda xatolik yuz berdi. Sinov rejimida mock ma&apos;lumotlar
-              yuklanishi mumkin.
-            </span>
-          </div>
+          <ErrorAlert
+            message={getErrorMessage(
+              errorHalls || errorBars,
+              'Joylarni yuklab bo‘lmadi.',
+            )}
+            onRetry={() => {
+              void queryClient.invalidateQueries({ queryKey: ['adminHalls'] });
+              void queryClient.invalidateQueries({ queryKey: ['adminBars'] });
+            }}
+          />
         )}
-
+        {approveMutation.error && (
+          <ErrorAlert
+            message={getErrorMessage(
+              approveMutation.error,
+              'Joy holatini o‘zgartirib bo‘lmadi.',
+            )}
+          />
+        )}
+        {approveMutation.isSuccess && (
+          <p
+            role="status"
+            className="rounded-xl border border-success/30 bg-success/10 p-4 text-sm font-bold text-success"
+          >
+            Joyning tasdiqlash holati yangilandi.
+          </p>
+        )}
         {/* Halls table */}
         <div className="card-lux overflow-hidden">
           <div className="flex items-center justify-between border-b border-line bg-surface-2/50 px-6 py-4">
@@ -86,7 +130,15 @@ export default function AdminVenuesPage() {
               <span className="h-8 w-8 rotate-45 animate-spin rounded-sm border-2 border-gold border-t-transparent" />
             </div>
           ) : halls.length > 0 ? (
-            <div className="overflow-x-auto">
+            <div
+              className="table-scroll"
+              tabIndex={0}
+              role="region"
+              aria-label="Joylar jadvali"
+            >
+              <p className="sticky left-0 w-fit px-5 py-2 text-xs text-ink-soft sm:hidden">
+                Jadvalni yon tomonga suring ↔
+              </p>
               <table className="table-lux">
                 <thead>
                   <tr>
@@ -99,34 +151,66 @@ export default function AdminVenuesPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {halls.map((hall: any) => (
+                  {halls.map((hall) => (
                     <tr key={`adm-hall-${hall.id}`}>
-                      <td className="font-extrabold text-ink">{hall.name}</td>
-                      <td>{hall.address}</td>
+                      <td className="table-copy font-extrabold text-ink">
+                        {hall.name}
+                      </td>
+                      <td className="table-copy">{hall.address}</td>
                       <td>{hall.max_capacity} kishi</td>
-                      <td>{parseFloat(hall.required_deposit).toLocaleString('uz-UZ')} UZS</td>
+                      <td>
+                        {parseFloat(hall.required_deposit).toLocaleString(
+                          'uz-UZ',
+                        )}{' '}
+                        UZS
+                      </td>
                       <td>
                         <ApprovalPill approved={hall.is_approved} />
                       </td>
                       <td className="text-right">
-                        {!hall.is_approved ? (
+                        {hall.is_approved === undefined ? (
+                          <span className="text-xs text-ink-soft">
+                            Tasdiqlash holati berilmagan
+                          </span>
+                        ) : !hall.is_approved ? (
                           <div className="flex justify-end gap-2">
                             <button
-                              onClick={() => approveMutation.mutate({ id: hall.id, type: 'hall', approved: true })}
-                              className="btn-outline !px-3.5 !py-1.5 !text-[11px] !border-success/50 !text-success hover:!bg-success hover:!text-white"
+                              disabled={approveMutation.isPending}
+                              onClick={() =>
+                                approveMutation.mutate({
+                                  id: hall.id,
+                                  type: 'hall',
+                                  approved: true,
+                                })
+                              }
+                              className="btn-outline !px-3.5 !py-1.5 !text-[11px] !border-success/50 !text-success hover:!bg-success hover:!text-paper"
                             >
                               <Check className="h-3.5 w-3.5" /> Tasdiqlash
                             </button>
                             <button
-                              onClick={() => approveMutation.mutate({ id: hall.id, type: 'hall', approved: false })}
-                              className="btn-outline !px-3.5 !py-1.5 !text-[11px] !border-danger/50 !text-danger hover:!bg-danger hover:!text-white"
+                              disabled={approveMutation.isPending}
+                              onClick={() =>
+                                approveMutation.mutate({
+                                  id: hall.id,
+                                  type: 'hall',
+                                  approved: false,
+                                })
+                              }
+                              className="btn-outline !px-3.5 !py-1.5 !text-[11px] !border-danger/50 !text-danger hover:!bg-danger hover:!text-paper"
                             >
                               <X className="h-3.5 w-3.5" /> Rad etish
                             </button>
                           </div>
                         ) : (
                           <button
-                            onClick={() => approveMutation.mutate({ id: hall.id, type: 'hall', approved: false })}
+                            disabled={approveMutation.isPending}
+                            onClick={() =>
+                              approveMutation.mutate({
+                                id: hall.id,
+                                type: 'hall',
+                                approved: false,
+                              })
+                            }
                             className="text-xs font-bold text-ink-faint transition-colors hover:text-danger"
                           >
                             Tasdiqni bekor qilish
@@ -140,7 +224,9 @@ export default function AdminVenuesPage() {
             </div>
           ) : (
             <p className="px-6 py-10 text-center text-sm font-semibold italic text-ink-faint">
-              Restoranlar topilmadi.
+              {errorHalls
+                ? 'Restoranlar yuklanmadi.'
+                : 'Restoranlar topilmadi.'}
             </p>
           )}
         </div>
@@ -160,7 +246,15 @@ export default function AdminVenuesPage() {
               <span className="h-8 w-8 rotate-45 animate-spin rounded-sm border-2 border-gold border-t-transparent" />
             </div>
           ) : bars.length > 0 ? (
-            <div className="overflow-x-auto">
+            <div
+              className="table-scroll"
+              tabIndex={0}
+              role="region"
+              aria-label="Joylar jadvali"
+            >
+              <p className="sticky left-0 w-fit px-5 py-2 text-xs text-ink-soft sm:hidden">
+                Jadvalni yon tomonga suring ↔
+              </p>
               <table className="table-lux">
                 <thead>
                   <tr>
@@ -173,34 +267,64 @@ export default function AdminVenuesPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {bars.map((bar: any) => (
+                  {bars.map((bar) => (
                     <tr key={`adm-bar-${bar.id}`}>
-                      <td className="font-extrabold text-ink">{bar.name}</td>
-                      <td>{bar.address}</td>
+                      <td className="table-copy font-extrabold text-ink">
+                        {bar.name}
+                      </td>
+                      <td className="table-copy">{bar.address}</td>
                       <td>{bar.capacity} kishi</td>
-                      <td>{parseFloat(bar.price_per_hour).toLocaleString('uz-UZ')} UZS</td>
+                      <td>
+                        {parseFloat(bar.price_per_hour).toLocaleString('uz-UZ')}{' '}
+                        UZS
+                      </td>
                       <td>
                         <ApprovalPill approved={bar.is_approved} />
                       </td>
                       <td className="text-right">
-                        {!bar.is_approved ? (
+                        {bar.is_approved === undefined ? (
+                          <span className="text-xs text-ink-soft">
+                            Tasdiqlash holati berilmagan
+                          </span>
+                        ) : !bar.is_approved ? (
                           <div className="flex justify-end gap-2">
                             <button
-                              onClick={() => approveMutation.mutate({ id: bar.id, type: 'bar', approved: true })}
-                              className="btn-outline !px-3.5 !py-1.5 !text-[11px] !border-success/50 !text-success hover:!bg-success hover:!text-white"
+                              disabled={approveMutation.isPending}
+                              onClick={() =>
+                                approveMutation.mutate({
+                                  id: bar.id,
+                                  type: 'bar',
+                                  approved: true,
+                                })
+                              }
+                              className="btn-outline !px-3.5 !py-1.5 !text-[11px] !border-success/50 !text-success hover:!bg-success hover:!text-paper"
                             >
                               <Check className="h-3.5 w-3.5" /> Tasdiqlash
                             </button>
                             <button
-                              onClick={() => approveMutation.mutate({ id: bar.id, type: 'bar', approved: false })}
-                              className="btn-outline !px-3.5 !py-1.5 !text-[11px] !border-danger/50 !text-danger hover:!bg-danger hover:!text-white"
+                              disabled={approveMutation.isPending}
+                              onClick={() =>
+                                approveMutation.mutate({
+                                  id: bar.id,
+                                  type: 'bar',
+                                  approved: false,
+                                })
+                              }
+                              className="btn-outline !px-3.5 !py-1.5 !text-[11px] !border-danger/50 !text-danger hover:!bg-danger hover:!text-paper"
                             >
                               <X className="h-3.5 w-3.5" /> Rad etish
                             </button>
                           </div>
                         ) : (
                           <button
-                            onClick={() => approveMutation.mutate({ id: bar.id, type: 'bar', approved: false })}
+                            disabled={approveMutation.isPending}
+                            onClick={() =>
+                              approveMutation.mutate({
+                                id: bar.id,
+                                type: 'bar',
+                                approved: false,
+                              })
+                            }
                             className="text-xs font-bold text-ink-faint transition-colors hover:text-danger"
                           >
                             Tasdiqni bekor qilish
@@ -213,7 +337,9 @@ export default function AdminVenuesPage() {
               </table>
             </div>
           ) : (
-            <p className="px-6 py-10 text-center text-sm font-semibold italic text-ink-faint">Barlar topilmadi.</p>
+            <p className="px-6 py-10 text-center text-sm font-semibold italic text-ink-faint">
+              {errorBars ? 'Barlar yuklanmadi.' : 'Barlar topilmadi.'}
+            </p>
           )}
         </div>
       </div>

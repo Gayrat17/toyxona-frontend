@@ -25,7 +25,7 @@ export interface VenueImage {
   id: number;
   image?: string;
   file?: string;
-  image_url: string;
+  image_url?: string;
   type?: string;
   is_main?: boolean;
   position?: number;
@@ -50,6 +50,7 @@ export interface WeddingHall {
   id: number;
   owner: number;
   owner_phone?: string;
+  is_approved?: boolean;
   region?: number | null;
   region_name?: string | null;
   district?: number | null;
@@ -58,6 +59,7 @@ export interface WeddingHall {
   address: string;
   description: string;
   max_capacity: number;
+  price_per_person?: string | null;
   required_deposit: string; // Decimals are serialized as strings in JSON API responses
   cover_image?: string | null;
   cover_image_url?: string | null;
@@ -72,6 +74,7 @@ export interface Bar {
   id: number;
   owner: number;
   owner_phone?: string;
+  is_approved?: boolean;
   region?: number | null;
   region_name?: string | null;
   district?: number | null;
@@ -123,7 +126,8 @@ export interface ShiftBlock {
   reason: string;
 }
 
-export type BookingStatus = 'HOLD' | 'PENDING' | 'CONFIRMED' | 'REJECTED' | 'CANCELLED';
+export type BookingStatus =
+  'HOLD' | 'PENDING' | 'CONFIRMED' | 'REJECTED' | 'CANCELLED';
 
 export interface BaseBooking {
   id: number;

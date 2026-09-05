@@ -1,131 +1,142 @@
-import axios from 'axios';
+import axios, { type InternalAxiosRequestConfig } from 'axios';
+import { readStorage, writeStorage } from '@/utils/storage';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api/v1';
+export const API_URL = '/api/v1';
+export const SESSION_EXPIRED_EVENT = 'toyxona:session-expired';
+export const api = axios.create({ baseURL: API_URL, timeout: 15000 });
 
-export const api = axios.create({
-  baseURL: API_URL,
+type SessionRequest = InternalAxiosRequestConfig & {
+  _retry?: boolean;
+  _sessionVersion?: number;
+};
+let sessionVersion = 0;
+let refreshPromise: Promise<string> | null = null;
+
+export function clearSession() {
+  sessionVersion += 1;
+  refreshPromise = null;
+  writeStorage('access_token', null);
+  writeStorage('refresh_token', null);
+  delete api.defaults.headers.common.Authorization;
+}
+
+export function saveSession(access: string, refresh?: string) {
+  if (
+    !writeStorage('access_token', access) ||
+    (refresh && !writeStorage('refresh_token', refresh))
+  ) {
+    clearSession();
+    throw new Error(
+      'Hisobga kirish uchun brauzerda mahalliy saqlashga ruxsat bering.',
+    );
+  }
+}
+
+function expireSession() {
+  clearSession();
+  if (typeof window !== 'undefined')
+    window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT));
+}
+
+function isCredentialRequest(config: InternalAxiosRequestConfig) {
+  return (
+    config.url?.includes('/auth/jwt/') ||
+    (config.method === 'post' && config.url === '/auth/users/')
+  );
+}
+
+api.interceptors.request.use((config: SessionRequest) => {
+  if (
+    config._sessionVersion !== undefined &&
+    config._sessionVersion !== sessionVersion
+  )
+    return Promise.reject(
+      new Error('Sessiya o‘zgargan. So‘rov bekor qilindi.'),
+    );
+  config._sessionVersion = sessionVersion;
+  const token = readStorage('access_token');
+  if (token && !isCredentialRequest(config))
+    config.headers.Authorization = `Bearer ${token}`;
+  else delete config.headers.Authorization;
+  return config;
 });
 
-// Helper to get access token from localStorage (safe for SSR)
-const getAccessToken = () => {
-  if (typeof window !== 'undefined') {
-    return localStorage.getItem('access_token');
+async function refreshAccessToken(refresh: string): Promise<string> {
+  try {
+    const { data } = await axios.post<{ access: string; refresh?: string }>(
+      `${API_URL}/auth/jwt/refresh/`,
+      { refresh },
+      { timeout: 15000 },
+    );
+    // A request completing after logout must never restore the old session.
+    if (readStorage('refresh_token') !== refresh)
+      throw new Error('Sessiya o‘zgargan. Qayta kiring.');
+    if (!data.access) throw new Error('Server kirish tokenini qaytarmadi.');
+    saveSession(data.access, data.refresh);
+    return data.access;
+  } catch (error) {
+    if (
+      axios.isAxiosError(error) &&
+      [400, 401, 403].includes(error.response?.status || 0) &&
+      readStorage('refresh_token') === refresh
+    )
+      expireSession();
+    throw error;
   }
-  return null;
-};
+}
 
-// Helper to get refresh token (safe for SSR)
-const getRefreshToken = () => {
-  if (typeof window !== 'undefined') {
-    return localStorage.getItem('refresh_token');
-  }
-  return null;
-};
-
-// Request Interceptor: Attach JWT access token to every outgoing request
-api.interceptors.request.use(
-  (config) => {
-    const token = getAccessToken();
-    if (token && !config.headers.Authorization) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
-
-// State variables to prevent concurrent refresh requests
-let isRefreshing = false;
-let failedQueue: Array<{
-  resolve: (token: string) => void;
-  reject: (err: any) => void;
-}> = [];
-
-// Helper to process queued requests once token is refreshed
-const processQueue = (error: any, token: string | null = null) => {
-  failedQueue.forEach((prom) => {
-    if (error) {
-      prom.reject(error);
-    } else {
-      prom.resolve(token!);
-    }
-  });
-  failedQueue = [];
-};
-
-// Response Interceptor: Catch 401 errors, refresh token, and retry request
 api.interceptors.response.use(
   (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
-
-    // Check if error status is 401 Unauthorized and is not already a retry
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      
-      // If already refreshing, add request to queue
-      if (isRefreshing) {
-        return new Promise<string>((resolve, reject) => {
-          failedQueue.push({ resolve, reject });
-        })
-          .then((token) => {
-            originalRequest.headers.Authorization = `Bearer ${token}`;
-            return api(originalRequest);
-          })
-          .catch((err) => Promise.reject(err));
-      }
-
-      originalRequest._retry = true;
-      isRefreshing = true;
-
-      const refreshToken = getRefreshToken();
-
-      // If refresh token is missing, redirect user to login
-      if (!refreshToken) {
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('access_token');
-          localStorage.removeItem('refresh_token');
-          window.location.href = '/login';
-        }
-        return Promise.reject(error);
-      }
-
-      try {
-        // Djoser's endpoint for JWT refresh is '/auth/jwt/refresh/'
-        const response = await axios.post(`${API_URL}/auth/jwt/refresh/`, {
-          refresh: refreshToken,
-        });
-
-        const newAccessToken = response.data.access;
-
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('access_token', newAccessToken);
-        }
-
-        // Setup common header and original request header
-        api.defaults.headers.common.Authorization = `Bearer ${newAccessToken}`;
-        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-
-        processQueue(null, newAccessToken);
-        isRefreshing = false;
-
-        // Retry original request
-        return api(originalRequest);
-      } catch (refreshError) {
-        processQueue(refreshError, null);
-        isRefreshing = false;
-
-        // Clear local storage tokens and force redirect to login
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('access_token');
-          localStorage.removeItem('refresh_token');
-          window.location.href = '/login';
-        }
-        return Promise.reject(refreshError);
-      }
+  async (error: unknown) => {
+    if (!axios.isAxiosError(error)) return Promise.reject(error);
+    const original = error.config as SessionRequest | undefined;
+    if (
+      error.response?.status !== 401 ||
+      !original ||
+      isCredentialRequest(original)
+    )
+      return Promise.reject(error);
+    // A late response from a logged-out account must not retry under a new account.
+    if (original._sessionVersion !== sessionVersion)
+      return Promise.reject(error);
+    if (original._retry) {
+      if (
+        original.headers.Authorization ===
+        `Bearer ${readStorage('access_token')}`
+      )
+        expireSession();
+      return Promise.reject(error);
     }
-
-    return Promise.reject(error);
-  }
+    // A late 401 may belong to the token that a concurrent request already rotated.
+    const currentAccess = readStorage('access_token');
+    if (
+      currentAccess &&
+      original.headers.Authorization !== `Bearer ${currentAccess}`
+    ) {
+      original._retry = true;
+      return api(original);
+    }
+    const refresh = readStorage('refresh_token');
+    if (!refresh) {
+      if (currentAccess) expireSession();
+      return Promise.reject(error);
+    }
+    original._retry = true;
+    // One refresh for all concurrent 401s, including token rotation.
+    if (!refreshPromise) {
+      const pending: Promise<string> = refreshAccessToken(refresh).finally(
+        () => {
+          if (refreshPromise === pending) refreshPromise = null;
+        },
+      );
+      refreshPromise = pending;
+    }
+    try {
+      const token = await refreshPromise;
+      original.headers.Authorization = `Bearer ${token}`;
+      return api(original);
+    } catch (refreshError) {
+      return Promise.reject(refreshError);
+    }
+  },
 );

@@ -1,44 +1,32 @@
-import { useQuery, keepPreviousData } from '@tanstack/react-query';
-import { fetchHallsRequest, fetchBarsRequest } from '@/services/venues';
-import { WeddingHall, Bar, PaginatedResponse } from '@/types';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { fetchBarsRequest, fetchHallsRequest } from '@/services/venues';
+import { useAuth } from '@/store/auth-context';
 
-const PAGE_SIZE = 10; // Default Django REST Framework Page Size
-
-/**
- * Custom React Query hook for Server-Side Paginated fetching of Venue Owner's halls or bars.
- * Includes queryKey binding ['owner_venues', tab, page], smooth pagination (keepPreviousData),
- * and passes my_venues=true so backend filters exclusively for the logged in user's venues.
- */
-export function useOwnerVenues(tab: 'halls' | 'bars' = 'halls', page: number = 1) {
-  const hallsQuery = useQuery<PaginatedResponse<WeddingHall>>({
-    queryKey: ['owner_venues', 'halls', page],
+export function useOwnerVenues(tab: 'halls' | 'bars' = 'halls', page = 1) {
+  const { user } = useAuth();
+  const hallsQuery = useQuery({
+    queryKey: ['owner_venues', user?.id, 'halls', page],
     queryFn: () => fetchHallsRequest(page, true),
-    enabled: tab === 'halls',
+    enabled: tab === 'halls' && !!user,
     placeholderData: keepPreviousData,
-    staleTime: 0,
   });
-
-  const barsQuery = useQuery<PaginatedResponse<Bar>>({
-    queryKey: ['owner_venues', 'bars', page],
+  const barsQuery = useQuery({
+    queryKey: ['owner_venues', user?.id, 'bars', page],
     queryFn: () => fetchBarsRequest(page, true),
-    enabled: tab === 'bars',
+    enabled: tab === 'bars' && !!user,
     placeholderData: keepPreviousData,
-    staleTime: 0,
   });
-
-  const activeQuery = tab === 'halls' ? hallsQuery : barsQuery;
-  const count = activeQuery.data?.count || 0;
-  const totalPages = Math.max(1, Math.ceil(count / PAGE_SIZE));
-
+  const active = tab === 'halls' ? hallsQuery : barsQuery;
   return {
     halls: hallsQuery.data?.results || [],
     bars: barsQuery.data?.results || [],
-    count,
-    totalPages,
-    isFetching: activeQuery.isFetching,
-    isLoading: activeQuery.isLoading,
-    isError: activeQuery.isError,
-    error: activeQuery.error,
+    count: active.data?.count || 0,
+    hasNextPage: !!active.data?.next,
+    hasPreviousPage: !!active.data?.previous,
+    isLoading: active.isLoading,
+    isFetching: active.isFetching,
+    isError: active.isError,
+    error: active.error,
     refetchHalls: hallsQuery.refetch,
     refetchBars: barsQuery.refetch,
   };

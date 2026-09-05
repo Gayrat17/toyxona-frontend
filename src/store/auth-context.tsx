@@ -1,103 +1,139 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User } from '@/types';
-import { loginRequest, registerRequest, fetchMeRequest } from '@/services/auth';
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
+import type { User } from '@/types';
+import {
+  loginRequest,
+  registerRequest,
+  fetchMeRequest,
+  RegistrationCompleteError,
+} from '@/services/auth';
+import {
+  clearSession,
+  saveSession,
+  SESSION_EXPIRED_EVENT,
+} from '@/services/api';
+import { readStorage } from '@/utils/storage';
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (phone_number: string, password: string) => Promise<void>;
-  register: (phone_number: string, first_name: string, password: string, role: string) => Promise<void>;
+  login: (phone: string, password: string) => Promise<User>;
+  register: (
+    phone: string,
+    name: string,
+    password: string,
+    role: 'CLIENT' | 'VENUE_OWNER',
+  ) => Promise<User>;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const router = useRouter();
-
-  // Load user profile on mount if access token is present
-  const loadUser = async () => {
-    if (typeof window === 'undefined') {
-      setLoading(false);
-      return;
-    }
-
-    const accessToken = localStorage.getItem('access_token');
-    if (!accessToken) {
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const me = await fetchMeRequest();
-      setUser(me);
-    } catch (err) {
-      // In case the token is expired/invalid, clear local tokens
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('refresh_token');
-      setUser(null);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const generation = useRef(0);
 
   useEffect(() => {
-    loadUser();
-  }, []);
-
-  const login = async (phone_number: string, password: string) => {
-    setLoading(true);
-    try {
-      const tokens = await loginRequest(phone_number, password);
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('access_token', tokens.access);
-        localStorage.setItem('refresh_token', tokens.refresh);
+    let active = true;
+    const initialGeneration = generation.current;
+    // Read browser storage after hydration; don't block public pages with a redirect.
+    Promise.resolve().then(async () => {
+      try {
+        if (readStorage('access_token') || readStorage('refresh_token')) {
+          const profile = await fetchMeRequest();
+          if (active && initialGeneration === generation.current)
+            setUser(profile);
+        }
+      } catch {
+        if (active && initialGeneration === generation.current) setUser(null);
+      } finally {
+        if (active) setLoading(false);
       }
-      
-      const me = await fetchMeRequest();
-      setUser(me);
-
-      // Redirect based on role
-      if (me.role === 'ADMIN') {
-        router.push('/admin/dashboard');
-      } else if (me.role === 'VENUE_OWNER') {
-        router.push('/dashboard');
-      } else {
-        router.push('/');
-      }
-    } catch (err) {
+    });
+    const onExpired = () => {
+      generation.current += 1;
       setUser(null);
-      throw err;
-    } finally {
-      setLoading(false);
+      queryClient.clear();
+    };
+    const onStorage = (event: StorageEvent) => {
+      if (
+        (event.key === 'access_token' || event.key === null) &&
+        !readStorage('access_token')
+      )
+        onExpired();
+    };
+    window.addEventListener(SESSION_EXPIRED_EVENT, onExpired);
+    window.addEventListener('storage', onStorage);
+    return () => {
+      active = false;
+      window.removeEventListener(SESSION_EXPIRED_EVENT, onExpired);
+      window.removeEventListener('storage', onStorage);
+    };
+  }, [queryClient]);
+
+  const login = async (phone: string, password: string): Promise<User> => {
+    const currentGeneration = ++generation.current;
+    clearSession();
+    try {
+      const tokens = await loginRequest(phone, password);
+      if (currentGeneration !== generation.current)
+        throw new Error('Kirish bekor qilindi.');
+      saveSession(tokens.access, tokens.refresh);
+      const profile = await fetchMeRequest();
+      if (currentGeneration !== generation.current)
+        throw new Error('Kirish bekor qilindi.');
+      queryClient.clear();
+      setUser(profile);
+      return profile;
+    } catch (error) {
+      if (currentGeneration === generation.current) {
+        clearSession();
+        setUser(null);
+      }
+      throw error;
     }
   };
 
-  const register = async (phone_number: string, first_name: string, password: string, role: string) => {
-    setLoading(true);
+  const register = async (
+    phone: string,
+    name: string,
+    password: string,
+    role: 'CLIENT' | 'VENUE_OWNER',
+  ) => {
+    await registerRequest({
+      phone_number: phone,
+      first_name: name.trim(),
+      password,
+      re_password: password,
+      role,
+    });
     try {
-      await registerRequest({ phone_number, first_name, password, re_password: password, role });
-      // Log in automatically after registration
-      await login(phone_number, password);
-    } catch (err) {
-      throw err;
-    } finally {
-      setLoading(false);
+      return await login(phone, password);
+    } catch {
+      // Retrying registration would create a duplicate account request.
+      throw new RegistrationCompleteError();
     }
   };
 
   const logout = () => {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('refresh_token');
-    }
+    generation.current += 1;
+    clearSession();
+    queryClient.clear();
     setUser(null);
-    router.push('/login');
+    router.replace('/login');
   };
 
   return (
@@ -105,12 +141,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       {children}
     </AuthContext.Provider>
   );
-};
+}
 
-export const useAuth = () => {
+export function useAuth() {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
+  if (!context) throw new Error('useAuth must be used within an AuthProvider');
   return context;
-};
+}

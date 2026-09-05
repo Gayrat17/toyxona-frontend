@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Crown, Phone, MapPin, Send, Camera } from 'lucide-react';
+import { Crown, ArrowRight } from 'lucide-react';
 
 export function Footer() {
   const year = new Date().getFullYear();
@@ -27,13 +27,18 @@ export function Footer() {
                 </span>
               </span>
               <div>
-                <p className="font-display text-2xl font-bold tracking-[0.08em] text-[#f2e9d6]">TOYXONA</p>
-                <p className="mt-0.5 text-[9px] font-bold uppercase tracking-[0.42em] text-gold">Luxe Venue</p>
+                <p className="font-display text-2xl font-bold tracking-[0.08em] text-[#f2e9d6]">
+                  TOYXONA
+                </p>
+                <p className="mt-0.5 text-[9px] font-bold uppercase tracking-[0.42em] text-gold">
+                  Luxe Venue
+                </p>
               </div>
             </div>
             <p className="mt-5 max-w-xs text-sm leading-relaxed text-[#b7a888]">
-              O‘zbekiston bo‘ylab eng sara to‘y zallari, restoranlar va barlarni bitta
-              platformada toping. Hashamatli kunlaringiz shu yerdan boshlanadi.
+              O‘zbekiston bo‘ylab eng sara to‘y zallari, restoranlar va barlarni
+              bitta platformada toping. Hashamatli kunlaringiz shu yerdan
+              boshlanadi.
             </p>
           </div>
 
@@ -42,63 +47,73 @@ export function Footer() {
             <p className="eyebrow !text-gold">Sahifalar</p>
             <ul className="mt-5 space-y-3 text-sm font-semibold text-[#b7a888]">
               <li>
-                <Link href="/" className="transition-colors hover:text-gold">
+                <Link
+                  href="/?category=halls#katalog"
+                  className="transition-colors hover:text-gold"
+                >
                   To‘y zallari
                 </Link>
               </li>
               <li>
-                <Link href="/?category=bars" className="transition-colors hover:text-gold">
+                <Link
+                  href="/?category=bars#katalog"
+                  className="transition-colors hover:text-gold"
+                >
                   Barlar &amp; Lounge
                 </Link>
               </li>
               <li>
-                <Link href="/login" className="transition-colors hover:text-gold">
+                <Link
+                  href="/login"
+                  className="transition-colors hover:text-gold"
+                >
                   Tizimga kirish
                 </Link>
               </li>
               <li>
-                <Link href="/register" className="transition-colors hover:text-gold">
+                <Link
+                  href="/register"
+                  className="transition-colors hover:text-gold"
+                >
                   Ro‘yxatdan o‘tish
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Contact */}
+          {/* Only publish real destinations, not placeholder phone numbers or social links. */}
           <div className="md:justify-self-end">
-            <p className="eyebrow !text-gold">Aloqa</p>
-            <ul className="mt-5 space-y-3 text-sm font-semibold text-[#b7a888]">
-              <li className="flex items-center gap-2.5">
-                <Phone className="h-4 w-4 text-gold" />
-                <span>+998 71 200 00 00</span>
-              </li>
-              <li className="flex items-center gap-2.5">
-                <MapPin className="h-4 w-4 text-gold" />
-                <span>Toshkent, Amir Temur shoh ko‘chasi</span>
-              </li>
-              <li className="flex items-center gap-2.5 pt-1">
-                <a
-                  href="#"
-                  className="flex h-9 w-9 items-center justify-center rounded-full border border-gold/40 text-gold transition-colors hover:bg-gold hover:text-espresso"
-                  aria-label="Instagram"
+            <p className="eyebrow !text-gold">Yordam</p>
+            <ul className="mt-5 space-y-3 text-sm font-semibold text-[#c4b496]">
+              <li>
+                <Link
+                  href="/#qanday-ishlaydi"
+                  className="flex items-center gap-2 hover:text-gold"
                 >
-                  <Camera className="h-4 w-4" />
-                </a>
-                <a
-                  href="#"
-                  className="flex h-9 w-9 items-center justify-center rounded-full border border-gold/40 text-gold transition-colors hover:bg-gold hover:text-espresso"
-                  aria-label="Telegram"
+                  Qanday ishlaydi? <ArrowRight className="h-4 w-4" />
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/register?role=VENUE_OWNER"
+                  className="hover:text-gold"
                 >
-                  <Send className="h-4 w-4" />
-                </a>
+                  Joy egalari uchun
+                </Link>
+              </li>
+              <li className="max-w-xs text-xs font-normal leading-relaxed">
+                Bron tafsilotlarini joy sahifasidagi ma’lumotlar orqali egasi
+                bilan kelishishingiz mumkin.
               </li>
             </ul>
           </div>
         </div>
 
-        <div className="mt-12 flex flex-col items-center justify-between gap-3 border-t border-gold/15 pt-6 text-xs text-[#8d7f63] sm:flex-row">
+        <div className="mt-12 flex flex-col items-center justify-between gap-3 border-t border-gold/15 pt-6 text-xs text-[#b7a888] sm:flex-row">
           <p>© {year} TOYXONA Luxe Venue. Barcha huquqlar himoyalangan.</p>
-          <p className="tracking-[0.2em] uppercase">Hashamat — bu an&apos;anadir</p>
+          <p className="tracking-[0.2em] uppercase">
+            Hashamat — bu an&apos;anadir
+          </p>
         </div>
       </div>
     </footer>

@@ -1,5 +1,11 @@
 import { api } from './api';
-import { HallCalendarData, HallBooking, BarBooking } from '@/types';
+import { fetchCollection } from './collections';
+import {
+  HallCalendarData,
+  BarCalendarData,
+  HallBooking,
+  BarBooking,
+} from '@/types';
 
 /**
  * Creates a new booking request for a wedding hall.
@@ -35,11 +41,13 @@ export const createBarBookingRequest = async (bookingData: {
 export const fetchHallCalendarRequest = async (
   hallId: number,
   year: number,
-  month: number
+  month: number,
 ): Promise<HallCalendarData> => {
   const response = await api.get(`/bookings/calendar/hall/${hallId}/`, {
     params: { year, month },
   });
+  if (!Array.isArray(response.data?.busy_shifts))
+    throw new Error('Serverdan noto‘g‘ri taqvim ma’lumoti keldi.');
   return response.data;
 };
 
@@ -47,16 +55,14 @@ export const fetchHallCalendarRequest = async (
  * Fetches received hall bookings for the logged in owner/admin.
  */
 export const fetchHallBookingsRequest = async (): Promise<HallBooking[]> => {
-  const response = await api.get('/bookings/hall/');
-  return response.data;
+  return fetchCollection<HallBooking>('/bookings/hall/');
 };
 
 /**
  * Fetches received bar bookings for the logged in owner/admin.
  */
 export const fetchBarBookingsRequest = async (): Promise<BarBooking[]> => {
-  const response = await api.get('/bookings/bar/');
-  return response.data;
+  return fetchCollection<BarBooking>('/bookings/bar/');
 };
 
 /**
@@ -64,7 +70,7 @@ export const fetchBarBookingsRequest = async (): Promise<BarBooking[]> => {
  */
 export const updateHallBookingStatus = async (
   id: number,
-  status: 'CONFIRMED' | 'REJECTED' | 'HOLD'
+  status: 'CONFIRMED' | 'REJECTED' | 'HOLD',
 ): Promise<HallBooking> => {
   const response = await api.patch(`/bookings/hall/${id}/`, { status });
   return response.data;
@@ -75,8 +81,21 @@ export const updateHallBookingStatus = async (
  */
 export const updateBarBookingStatus = async (
   id: number,
-  status: 'CONFIRMED' | 'REJECTED' | 'HOLD'
+  status: 'CONFIRMED' | 'REJECTED' | 'HOLD',
 ): Promise<BarBooking> => {
   const response = await api.patch(`/bookings/bar/${id}/`, { status });
+  return response.data;
+};
+
+export const fetchBarCalendarRequest = async (
+  id: number,
+  year: number,
+  month: number,
+): Promise<BarCalendarData> => {
+  const response = await api.get(`/bookings/calendar/bar/${id}/`, {
+    params: { year, month },
+  });
+  if (!Array.isArray(response.data?.busy_slots))
+    throw new Error('Serverdan noto‘g‘ri taqvim ma’lumoti keldi.');
   return response.data;
 };
