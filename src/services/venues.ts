@@ -1,15 +1,20 @@
 import { api } from './api';
-import { WeddingHall, Bar, Shift, Package, Decoration, PaginatedResponse, Region } from '@/types';
+import { fetchCollection, normalizePage } from './collections';
+import {
+  WeddingHall,
+  Bar,
+  Shift,
+  Package,
+  Decoration,
+  PaginatedResponse,
+  Region,
+} from '@/types';
 
 /**
  * Fetches all regions with nested districts from database.
  */
 export const fetchRegionsRequest = async (): Promise<Region[]> => {
-  const response = await api.get('/venues/regions/');
-  if (response.data && response.data.results) {
-    return response.data.results;
-  }
-  return Array.isArray(response.data) ? response.data : [];
+  return fetchCollection<Region>('/venues/regions/');
 };
 
 export interface VenueFilterParams {
@@ -19,6 +24,7 @@ export interface VenueFilterParams {
   district?: string | number;
   search?: string;
   min_capacity?: number;
+  date?: string;
 }
 
 /**
@@ -27,26 +33,20 @@ export interface VenueFilterParams {
 export const fetchHallsRequest = async (
   page: number = 1,
   my_venues?: boolean,
-  filters?: VenueFilterParams
+  filters?: VenueFilterParams,
 ): Promise<PaginatedResponse<WeddingHall>> => {
-  const params: any = { page, ...filters };
+  const params: VenueFilterParams = { page, ...filters };
   if (my_venues) params.my_venues = true;
   const response = await api.get('/venues/halls/', { params });
-  if (Array.isArray(response.data)) {
-    return {
-      count: response.data.length,
-      next: null,
-      previous: null,
-      results: response.data,
-    };
-  }
-  return response.data;
+  return normalizePage(response.data);
 };
 
 /**
  * Fetches a single wedding hall by its ID.
  */
-export const fetchHallByIdRequest = async (id: number): Promise<WeddingHall> => {
+export const fetchHallByIdRequest = async (
+  id: number,
+): Promise<WeddingHall> => {
   const response = await api.get(`/venues/halls/${id}/`);
   return response.data;
 };
@@ -57,20 +57,12 @@ export const fetchHallByIdRequest = async (id: number): Promise<WeddingHall> => 
 export const fetchBarsRequest = async (
   page: number = 1,
   my_venues?: boolean,
-  filters?: VenueFilterParams
+  filters?: VenueFilterParams,
 ): Promise<PaginatedResponse<Bar>> => {
-  const params: any = { page, ...filters };
+  const params: VenueFilterParams = { page, ...filters };
   if (my_venues) params.my_venues = true;
   const response = await api.get('/venues/bars/', { params });
-  if (Array.isArray(response.data)) {
-    return {
-      count: response.data.length,
-      next: null,
-      previous: null,
-      results: response.data,
-    };
-  }
-  return response.data;
+  return normalizePage(response.data);
 };
 
 /**
@@ -85,45 +77,52 @@ export const fetchBarByIdRequest = async (id: number): Promise<Bar> => {
  * Fetches all shifts.
  */
 export const fetchShiftsRequest = async (): Promise<Shift[]> => {
-  const response = await api.get('/venues/shifts/');
-  return response.data;
+  return fetchCollection<Shift>('/venues/shifts/');
 };
 
 /**
  * Fetches all packages.
  */
 export const fetchPackagesRequest = async (): Promise<Package[]> => {
-  const response = await api.get('/venues/packages/');
-  return response.data;
+  return fetchCollection<Package>('/venues/packages/');
 };
 
 /**
  * Fetches all decorations.
  */
 export const fetchDecorationsRequest = async (): Promise<Decoration[]> => {
-  const response = await api.get('/venues/decorations/');
-  return response.data;
+  return fetchCollection<Decoration>('/venues/decorations/');
 };
 
 /**
  * Creates a new Wedding Hall (supports JSON or FormData for media uploads).
  */
-export const createHallRequest = async (data: FormData | any): Promise<WeddingHall> => {
+export const createHallRequest = async (
+  data: FormData | Record<string, unknown>,
+): Promise<WeddingHall> => {
   const response = await api.post('/venues/halls/', data);
   return response.data;
 };
 
-export const createBarRequest = async (data: FormData | any): Promise<Bar> => {
+export const createBarRequest = async (
+  data: FormData | Record<string, unknown>,
+): Promise<Bar> => {
   const response = await api.post('/venues/bars/', data);
   return response.data;
 };
 
-export const updateHallRequest = async (id: number, data: FormData | any): Promise<WeddingHall> => {
+export const updateHallRequest = async (
+  id: number,
+  data: FormData | Record<string, unknown>,
+): Promise<WeddingHall> => {
   const response = await api.patch(`/venues/halls/${id}/`, data);
   return response.data;
 };
 
-export const updateBarRequest = async (id: number, data: FormData | any): Promise<Bar> => {
+export const updateBarRequest = async (
+  id: number,
+  data: FormData | Record<string, unknown>,
+): Promise<Bar> => {
   const response = await api.patch(`/venues/bars/${id}/`, data);
   return response.data;
 };
@@ -166,3 +165,6 @@ export const createShiftBlockRequest = async (data: {
   const response = await api.post('/venues/blocks/', data);
   return response.data;
 };
+
+export const fetchOwnerHallsRequest = () =>
+  fetchCollection<WeddingHall>('/venues/halls/', { my_venues: true });

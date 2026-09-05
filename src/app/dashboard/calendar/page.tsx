@@ -1,193 +1,247 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useQuery, useMutation } from '@tanstack/react-query';
-import { fetchHallsRequest, fetchShiftsRequest, createShiftBlockRequest } from '@/services/venues';
-import { WeddingHall, Shift, PaginatedResponse } from '@/types';
-import { SkeletonCardLoader } from '@/components/common/skeleton-loader';
+import { useState } from 'react';
+import Link from 'next/link';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { CalendarOff, Check } from 'lucide-react';
+import { useAuth } from '@/store/auth-context';
+import {
+  fetchOwnerHallsRequest,
+  fetchShiftsRequest,
+  createShiftBlockRequest,
+} from '@/services/venues';
+import { getErrorMessage } from '@/utils/errors';
+import { localDateString, parseLocalDate } from '@/utils/date';
 import { ErrorAlert } from '@/components/common/error-alert';
-import { AlertCircle, Check, CalendarOff } from 'lucide-react';
+import { LoadingState } from '@/components/common/loading-state';
+import { VenueCalendar } from '@/components/common/venue-calendar';
 
 export default function OwnerCalendarPage() {
-  const { data: hallsRes, isLoading: loadingHalls, isError: errorHalls, refetch: refetchHalls } = useQuery<
-    PaginatedResponse<WeddingHall>
-  >({
-    queryKey: ['ownerHalls'],
-    queryFn: () => fetchHallsRequest(1),
-    staleTime: 1000 * 60 * 5,
+  const { user } = useAuth();
+  const client = useQueryClient();
+  const halls = useQuery({
+    queryKey: ['ownerHalls', user?.id],
+    queryFn: fetchOwnerHallsRequest,
   });
-
-  const halls = hallsRes?.results || [];
-
-  const { data: shifts = [], isLoading: loadingShifts } = useQuery<Shift[]>({
+  const shifts = useQuery({
     queryKey: ['shifts'],
     queryFn: fetchShiftsRequest,
-    staleTime: 1000 * 60 * 5,
   });
-
-  const [blockHallId, setBlockHallId] = useState('');
-  const [blockShiftId, setBlockShiftId] = useState('');
-  const [blockDate, setBlockDate] = useState('');
-  const [blockReason, setBlockReason] = useState('Remont/Texnik sozlash');
-
+  const [hallId, setHallId] = useState('');
+  const [shiftId, setShiftId] = useState('');
+  const [date, setDate] = useState('');
+  const [reason, setReason] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-
-  const createBlockMutation = useMutation({
+  const mutation = useMutation({
     mutationFn: createShiftBlockRequest,
     onSuccess: () => {
+      void client.invalidateQueries({ queryKey: ['calendar'] });
       setSuccess(true);
-      setBlockDate('');
-      setBlockReason('Remont/Texnik sozlash');
-      setTimeout(() => setSuccess(false), 3000);
+      setDate('');
     },
   });
-
-  const handleBlockSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setSuccess(false);
-
-    if (!blockHallId || !blockShiftId || !blockDate) {
-      setError('Iltimos restoran, smena va sanani tanlang.');
-      return;
-    }
-
-    try {
-      await createBlockMutation.mutateAsync({
-        hall: parseInt(blockHallId),
-        shift: parseInt(blockShiftId),
-        date: blockDate,
-        reason: blockReason,
-      });
-    } catch (err: any) {
-      console.error(err);
-      setError(err.response?.data?.detail || 'Sanani bloklashda xatolik yuz berdi.');
-    }
-  };
-
-  const isLoading = loadingHalls || loadingShifts;
-
-  if (isLoading) {
-    return <SkeletonCardLoader count={1} />;
-  }
-
-  if (errorHalls) {
+  const ownerHalls =
+    halls.data?.filter((hall) => hall.owner === user?.id) || [];
+  const availableShifts =
+    shifts.data?.filter(
+      (shift) => shift.hall === Number(hallId) && shift.is_active,
+    ) || [];
+  if (halls.isLoading || shifts.isLoading) return <LoadingState />;
+  if (halls.isError || shifts.isError)
     return (
-      <ErrorAlert message="Restoranlar ro'yxatini yuklashda xatolik yuz berdi." onRetry={refetchHalls} />
+      <ErrorAlert
+        message="Zallar yoki smenalarni yuklab bo‘lmadi."
+        onRetry={() => {
+          void halls.refetch();
+          void shifts.refetch();
+        }}
+      />
     );
-  }
+  if (!ownerHalls.length)
+    return (
+      <div className="card-lux mx-auto max-w-xl p-8 text-center">
+        <h2 className="font-display text-xl font-bold">
+          Hali to‘y zali qo‘shilmagan
+        </h2>
+        <p className="mt-3 text-sm text-ink-soft">
+          Smenalarni bloklash uchun avval o‘z zalingizni qo‘shing.
+        </p>
+        <Link href="/dashboard/add" className="btn-gold mt-5">
+          Joy qo‘shish
+        </Link>
+      </div>
+    );
 
   return (
-    <div className="mx-auto w-full max-w-3xl">
-      <div className="card-lux overflow-hidden">
-        {/* Header strip */}
-        <div className="texture-grain relative bg-espresso px-7 py-6">
-          <div
-            className="pointer-events-none absolute inset-0 opacity-[0.09]"
-            style={{
-              backgroundImage:
-                "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='84' height='84' viewBox='0 0 84 84'%3E%3Cg fill='none' stroke='%23cda964' stroke-width='1'%3E%3Crect x='26' y='26' width='32' height='32'/%3E%3Crect x='26' y='26' width='32' height='32' transform='rotate(45 42 42)'/%3E%3Ccircle cx='42' cy='42' r='4.5'/%3E%3C/g%3E%3C/svg%3E\")",
-            }}
-          />
-          <div className="relative z-[2] flex items-center gap-4">
-            <span className="flex h-12 w-12 rotate-45 items-center justify-center border border-gold/50 bg-white/5">
-              <CalendarOff className="h-5 w-5 rotate-[-45deg] text-gold" />
-            </span>
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gold">Boshqaruv</p>
-              <h3 className="mt-0.5 font-display text-xl font-bold text-[#f2e9d6]">
-                Taqvim smenasini yopish (bloklash)
-              </h3>
-            </div>
-          </div>
-          <p className="relative z-[2] mt-3 text-xs leading-relaxed text-[#b7a888]">
-            Muayyan restorandagi smenani belgilangan sanada bron qilishdan yopib
-            qo&apos;yishingiz mumkin — mijozlar taqvimda uni «Blok» ko&apos;rinishida ko&apos;radi.
+    <div className="mx-auto max-w-3xl space-y-6">
+      <section className="card-lux overflow-hidden">
+        <div className="bg-espresso p-5 sm:p-7">
+          <h2 className="flex items-center gap-3 font-display text-xl font-bold text-[#f2e9d6]">
+            <CalendarOff className="h-6 w-6 shrink-0 text-gold" />
+            Taqvim smenasini bloklash
+          </h2>
+          <p className="mt-3 text-sm leading-relaxed text-[#c4b496]">
+            Ta’mirlash yoki xususiy tadbir uchun smenani bronlardan yoping.
           </p>
         </div>
-
-        <form onSubmit={handleBlockSubmit} className="space-y-5 p-7">
-          {error && (
-            <div className="flex items-center gap-2.5 rounded-xl border border-danger/30 bg-danger/5 p-3.5 text-[13px] font-semibold text-danger">
-              <AlertCircle className="h-4 w-4 shrink-0" />
-              <span>{error}</span>
-            </div>
-          )}
-
+        <form
+          aria-label="Smenani bloklash"
+          onSubmit={async (event) => {
+            event.preventDefault();
+            if (mutation.isPending) return;
+            setError(null);
+            setSuccess(false);
+            if (
+              !ownerHalls.some((hall) => hall.id === Number(hallId)) ||
+              !availableShifts.some((shift) => shift.id === Number(shiftId))
+            )
+              return setError(
+                'O‘zingizga tegishli zal va uning faol smenasini tanlang.',
+              );
+            if (
+              !parseLocalDate(date) ||
+              date < localDateString() ||
+              !reason.trim()
+            )
+              return setError('Kelgusi sana va bloklash sababini kiriting.');
+            try {
+              await mutation.mutateAsync({
+                hall: Number(hallId),
+                shift: Number(shiftId),
+                date,
+                reason: reason.trim(),
+              });
+            } catch (err) {
+              setError(getErrorMessage(err));
+            }
+          }}
+          className="space-y-5 p-5 sm:p-7"
+        >
+          {error && <ErrorAlert message={error} />}
           {success && (
-            <div className="flex items-center gap-2.5 rounded-xl border border-success/30 bg-success/5 p-3.5 text-[13px] font-semibold text-success">
-              <Check className="h-4 w-4 shrink-0" />
-              <span>Smena belgilangan sanada muvaffaqiyatli bloklandi!</span>
+            <div
+              role="status"
+              className="flex items-center gap-2 rounded-xl border border-success/30 bg-success/10 p-3 text-sm font-bold text-success"
+            >
+              <Check className="h-5 w-5 shrink-0" />
+              Smena belgilangan sanada bloklandi.
             </div>
           )}
-
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <fieldset
+            disabled={mutation.isPending}
+            className="grid gap-5 sm:grid-cols-2"
+          >
             <div>
-              <label className="field-label">Restoranni tanlang</label>
+              <label htmlFor="block-hall" className="field-label">
+                Restoranni tanlang
+              </label>
               <select
+                id="block-hall"
                 required
-                value={blockHallId}
-                onChange={(e) => setBlockHallId(e.target.value)}
+                value={hallId}
+                onChange={(e) => {
+                  setHallId(e.target.value);
+                  setShiftId('');
+                  setSuccess(false);
+                }}
                 className="select-lux mt-2"
               >
-                <option value="">— Restoran tanlang —</option>
-                {halls.map((h) => (
-                  <option key={`h-opt-${h.id}`} value={h.id}>
-                    {h.name}
+                <option value="">Restoran tanlang</option>
+                {ownerHalls.map((hall) => (
+                  <option key={hall.id} value={hall.id}>
+                    {hall.name}
                   </option>
                 ))}
               </select>
             </div>
-
             <div>
-              <label className="field-label">Smenani tanlang</label>
+              <label htmlFor="block-shift" className="field-label">
+                Smenani tanlang
+              </label>
               <select
+                id="block-shift"
                 required
-                value={blockShiftId}
-                onChange={(e) => setBlockShiftId(e.target.value)}
+                disabled={!hallId || !availableShifts.length}
+                value={shiftId}
+                onChange={(e) => {
+                  setShiftId(e.target.value);
+                  setSuccess(false);
+                }}
                 className="select-lux mt-2"
               >
-                <option value="">— Smena tanlang —</option>
-                {shifts
-                  .filter((s) => !blockHallId || s.hall === parseInt(blockHallId))
-                  .map((s) => (
-                    <option key={`s-opt-${s.id}`} value={s.id}>
-                      {s.name} ({s.start_time} - {s.end_time})
-                    </option>
-                  ))}
+                <option value="">Smena tanlang</option>
+                {availableShifts.map((shift) => (
+                  <option key={shift.id} value={shift.id}>
+                    {shift.name} ({shift.start_time.slice(0, 5)} –{' '}
+                    {shift.end_time.slice(0, 5)})
+                  </option>
+                ))}
               </select>
             </div>
-
             <div>
-              <label className="field-label">Yopiladigan sana</label>
+              <label htmlFor="block-date" className="field-label">
+                Yopiladigan sana
+              </label>
               <input
+                id="block-date"
                 type="date"
+                min={localDateString()}
                 required
-                value={blockDate}
-                onChange={(e) => setBlockDate(e.target.value)}
+                value={date}
+                onChange={(e) => {
+                  setDate(e.target.value);
+                  setSuccess(false);
+                }}
                 className="input-lux mt-2"
               />
             </div>
-
             <div>
-              <label className="field-label">Yopish sababi</label>
+              <label htmlFor="block-reason" className="field-label">
+                Yopish sababi
+              </label>
               <input
-                type="text"
+                id="block-reason"
                 required
-                placeholder="Masalan: Ta'mirlash yoki xususiy tadbir"
-                value={blockReason}
-                onChange={(e) => setBlockReason(e.target.value)}
+                maxLength={255}
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                placeholder="Masalan: ta’mirlash"
                 className="input-lux mt-2"
               />
             </div>
-          </div>
-
-          <button type="submit" disabled={createBlockMutation.isPending} className="btn-ink w-full !py-3.5">
-            {createBlockMutation.isPending ? 'Bloklanmoqda...' : 'Smenani bloklash'}
+          </fieldset>
+          {hallId && !availableShifts.length && (
+            <p className="text-sm text-ink-soft">
+              Bu zalda faol smena yo‘q.{' '}
+              <Link
+                href={`/dashboard/venues/halls/${hallId}`}
+                className="font-bold text-gold-strong underline"
+              >
+                Smena qo‘shish
+              </Link>
+            </p>
+          )}
+          <button
+            type="submit"
+            disabled={mutation.isPending || !availableShifts.length}
+            className="btn-ink w-full"
+          >
+            {mutation.isPending ? 'Bloklanmoqda…' : 'Smenani bloklash'}
           </button>
         </form>
-      </div>
+      </section>
+      {hallId && (
+        <VenueCalendar
+          key={hallId}
+          type="halls"
+          id={Number(hallId)}
+          onSelectDate={(value) => {
+            setDate(value);
+            setSuccess(false);
+          }}
+        />
+      )}
     </div>
   );
 }

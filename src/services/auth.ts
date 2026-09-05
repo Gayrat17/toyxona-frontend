@@ -1,48 +1,50 @@
 import { api } from './api';
-import { User } from '../types';
+import type { User } from '@/types';
 
-/**
- * Formats user phone number to standard +998XXXXXXXXX format.
- */
-export const formatPhoneNumber = (phone: string): string => {
-  const cleaned = phone.trim().replace(/\s+/g, '');
-  if (!cleaned.startsWith('+')) {
-    if (cleaned.startsWith('998')) {
-      return `+${cleaned}`;
-    }
-    return `+998${cleaned}`;
-  }
-  return cleaned;
-};
+export function formatPhoneNumber(phone: string): string {
+  const digits = phone.replace(/\D/g, '');
+  return `+${digits.length === 9 ? `998${digits}` : digits}`;
+}
 
-/**
- * Sends a request to retrieve JWT access and refresh tokens.
- */
-export const loginRequest = async (phone_number: string, password: string) => {
-  const formattedPhone = formatPhoneNumber(phone_number);
-  const response = await api.post('/auth/jwt/create/', { 
-    phone_number: formattedPhone, 
-    password 
-  });
-  return response.data; // Expected output: { access: string, refresh: string }
-};
+export function isValidPhoneNumber(phone: string): boolean {
+  return /^\+998\d{9}$/.test(formatPhoneNumber(phone));
+}
 
-/**
- * Registers a new user.
- */
-export const registerRequest = async (userData: any) => {
-  const formattedData = {
+export async function loginRequest(phone_number: string, password: string) {
+  const { data } = await api.post<{ access: string; refresh: string }>(
+    '/auth/jwt/create/',
+    {
+      phone_number: formatPhoneNumber(phone_number),
+      password,
+    },
+  );
+  return data;
+}
+
+export async function registerRequest(userData: {
+  phone_number: string;
+  first_name: string;
+  password: string;
+  re_password: string;
+  role: 'CLIENT' | 'VENUE_OWNER';
+}): Promise<User> {
+  const { data } = await api.post<User>('/auth/users/', {
     ...userData,
-    phone_number: userData.phone_number ? formatPhoneNumber(userData.phone_number) : userData.phone_number
-  };
-  const response = await api.post('/auth/users/', formattedData);
-  return response.data; // Returns created User object
-};
+    phone_number: formatPhoneNumber(userData.phone_number),
+  });
+  return data;
+}
 
-/**
- * Fetches the currently logged in user's profile information.
- */
-export const fetchMeRequest = async (): Promise<User> => {
-  const response = await api.get('/auth/users/me/');
-  return response.data;
-};
+export async function fetchMeRequest(): Promise<User> {
+  return (await api.get<User>('/auth/users/me/')).data;
+}
+
+/** The account exists even when the subsequent automatic sign-in fails. */
+export class RegistrationCompleteError extends Error {
+  constructor() {
+    super(
+      'Hisob yaratildi, ammo avtomatik kirish yakunlanmadi. Telefon raqamingiz va parolingiz bilan tizimga kiring.',
+    );
+    this.name = 'RegistrationCompleteError';
+  }
+}

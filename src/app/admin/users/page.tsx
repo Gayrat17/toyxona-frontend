@@ -2,9 +2,14 @@
 
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { fetchAllUsersRequest, toggleUserStatusRequest } from '@/services/admin';
-import { Search, UserMinus, UserCheck, RefreshCw, AlertCircle } from 'lucide-react';
+import {
+  fetchAllUsersRequest,
+  toggleUserStatusRequest,
+} from '@/services/admin';
+import { Search, UserMinus, UserCheck, RefreshCw } from 'lucide-react';
 import { User } from '@/types';
+import { getErrorMessage } from '@/utils/errors';
+import { ErrorAlert } from '@/components/common/error-alert';
 
 function RolePill({ role }: { role: string }) {
   const map: Record<string, string> = {
@@ -12,8 +17,14 @@ function RolePill({ role }: { role: string }) {
     VENUE_OWNER: '',
   };
   return (
-    <span className={`badge-outline ${map[role] || '!border-line-strong !bg-surface-2 !text-ink-soft'}`}>
-      {role === 'VENUE_OWNER' ? 'Joy egasi' : role === 'CLIENT' ? 'Mijoz' : role}
+    <span
+      className={`badge-outline ${role in map ? map[role] : '!border-line-strong !bg-surface-2 !text-ink-soft'}`}
+    >
+      {role === 'VENUE_OWNER'
+        ? 'Joy egasi'
+        : role === 'CLIENT'
+          ? 'Mijoz'
+          : role}
     </span>
   );
 }
@@ -22,13 +33,20 @@ export default function AdminUsersPage() {
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
 
-  const { data: users = [], isLoading, error } = useQuery<User[]>({
+  const {
+    data: users = [],
+    isLoading,
+    isFetching,
+    error,
+    refetch,
+  } = useQuery<User[]>({
     queryKey: ['adminUsers'],
     queryFn: fetchAllUsersRequest,
   });
 
   const toggleStatusMutation = useMutation({
-    mutationFn: ({ id, isActive }: { id: number; isActive: boolean }) => toggleUserStatusRequest(id, isActive),
+    mutationFn: ({ id, isActive }: { id: number; isActive: boolean }) =>
+      toggleUserStatusRequest(id, isActive),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['adminUsers'] });
     },
@@ -38,43 +56,71 @@ export default function AdminUsersPage() {
     const fullName = `${u.first_name || ''} ${u.last_name || ''}`.toLowerCase();
     const phone = u.phone_number.toLowerCase();
     const query = searchTerm.toLowerCase();
-    return fullName.includes(query) || phone.includes(query);
+    return (
+      fullName.includes(query.trim()) ||
+      phone.replace(/\s/g, '').includes(query.replace(/\s/g, '').trim())
+    );
   });
 
   return (
-    <div className="flex flex-col flex-1 overflow-y-auto">
-      {/* Top header */}
-      <header className="flex h-16 shrink-0 items-center justify-between border-b border-line bg-paper-soft/90 px-8 backdrop-blur-md">
-        <h2 className="font-display text-lg font-bold text-ink">Foydalanuvchilar boshqaruvi</h2>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-sm text-ink-soft">
+          Foydalanuvchi hisoblari va kirish huquqlarini boshqaring.
+        </p>
         <button
-          onClick={() => queryClient.invalidateQueries({ queryKey: ['adminUsers'] })}
-          className="flex h-9 w-9 items-center justify-center rounded-full border border-line text-ink-soft transition-colors hover:border-gold/60 hover:text-gold-strong"
-          title="Yangilash"
+          type="button"
+          aria-label="Yangilash"
+          disabled={isFetching}
+          onClick={() => {
+            void refetch();
+          }}
+          className="btn-outline !px-3 !py-2"
         >
-          <RefreshCw className="h-4 w-4" />
+          <RefreshCw
+            className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`}
+          />
         </button>
-      </header>
-
-      <div className="flex-1 space-y-6 p-8">
+      </div>
+      <div className="space-y-6">
         {error && (
-          <div className="flex items-center gap-2.5 rounded-xl border border-danger/30 bg-danger/5 p-4 text-sm font-semibold text-danger">
-            <AlertCircle className="h-5 w-5 shrink-0" />
-            <span>
-              Foydalanuvchilarni yuklashda xatolik yuz berdi. Sinov rejimida mock ma&apos;lumotlar
-              yuklanishi mumkin.
-            </span>
-          </div>
+          <ErrorAlert
+            message={getErrorMessage(
+              error,
+              'Foydalanuvchilarni yuklab bo‘lmadi.',
+            )}
+            onRetry={() => {
+              void refetch();
+            }}
+          />
+        )}
+        {toggleStatusMutation.error && (
+          <ErrorAlert
+            message={getErrorMessage(
+              toggleStatusMutation.error,
+              'Foydalanuvchi holatini o‘zgartirib bo‘lmadi.',
+            )}
+          />
+        )}
+        {toggleStatusMutation.isSuccess && (
+          <p
+            role="status"
+            className="rounded-xl border border-success/30 bg-success/10 p-4 text-sm font-bold text-success"
+          >
+            Foydalanuvchi holati yangilandi.
+          </p>
         )}
 
         {/* Search */}
         <div className="relative flex max-w-md items-center">
           <Search className="absolute left-3.5 h-4 w-4 text-gold" />
           <input
-            type="text"
+            type="search"
+            aria-label="Ism yoki telefon bo‘yicha qidirish"
             placeholder="Ism yoki telefon bo'yicha qidirish..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="input-lux pl-10"
+            className="input-lux input-with-icon"
           />
         </div>
 
@@ -85,7 +131,15 @@ export default function AdminUsersPage() {
           </div>
         ) : filteredUsers.length > 0 ? (
           <div className="card-lux overflow-hidden">
-            <div className="overflow-x-auto">
+            <div
+              className="table-scroll"
+              tabIndex={0}
+              role="region"
+              aria-label="Foydalanuvchilar jadvali"
+            >
+              <p className="sticky left-0 w-fit px-5 py-2 text-xs text-ink-soft sm:hidden">
+                Jadvalni yon tomonga suring ↔
+              </p>
               <table className="table-lux">
                 <thead>
                   <tr>
@@ -100,7 +154,7 @@ export default function AdminUsersPage() {
                 <tbody>
                   {filteredUsers.map((u) => (
                     <tr key={`adm-usr-${u.id}`}>
-                      <td>
+                      <td className="table-copy">
                         <span className="flex items-center gap-2.5">
                           <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gold-tint text-xs font-black text-gold-strong">
                             {(u.first_name || 'I').charAt(0).toUpperCase()}
@@ -138,21 +192,36 @@ export default function AdminUsersPage() {
                         {u.role !== 'ADMIN' ? (
                           u.is_active ? (
                             <button
-                              onClick={() => toggleStatusMutation.mutate({ id: u.id, isActive: false })}
-                              className="btn-outline !ml-auto !px-3.5 !py-1.5 !text-[11px] !border-danger/50 !text-danger hover:!bg-danger hover:!text-white"
+                              disabled={toggleStatusMutation.isPending}
+                              onClick={() =>
+                                toggleStatusMutation.mutate({
+                                  id: u.id,
+                                  isActive: false,
+                                })
+                              }
+                              className="btn-outline !ml-auto !px-3.5 !py-1.5 !text-[11px] !border-danger/50 !text-danger hover:!bg-danger hover:!text-paper"
                             >
                               <UserMinus className="h-3.5 w-3.5" /> Bloklash
                             </button>
                           ) : (
                             <button
-                              onClick={() => toggleStatusMutation.mutate({ id: u.id, isActive: true })}
-                              className="btn-outline !ml-auto !px-3.5 !py-1.5 !text-[11px] !border-success/50 !text-success hover:!bg-success hover:!text-white"
+                              disabled={toggleStatusMutation.isPending}
+                              onClick={() =>
+                                toggleStatusMutation.mutate({
+                                  id: u.id,
+                                  isActive: true,
+                                })
+                              }
+                              className="btn-outline !ml-auto !px-3.5 !py-1.5 !text-[11px] !border-success/50 !text-success hover:!bg-success hover:!text-paper"
                             >
-                              <UserCheck className="h-3.5 w-3.5" /> Blokdan ochish
+                              <UserCheck className="h-3.5 w-3.5" /> Blokdan
+                              ochish
                             </button>
                           )
                         ) : (
-                          <span className="text-xs italic text-ink-faint">Boshqarib bo&apos;lmaydi</span>
+                          <span className="text-xs italic text-ink-faint">
+                            Boshqarib bo&apos;lmaydi
+                          </span>
                         )}
                       </td>
                     </tr>
@@ -161,9 +230,11 @@ export default function AdminUsersPage() {
               </table>
             </div>
           </div>
-        ) : (
-          <p className="py-10 text-center text-sm font-semibold italic text-ink-faint">Foydalanuvchilar topilmadi.</p>
-        )}
+        ) : !error ? (
+          <p className="py-10 text-center text-sm font-semibold italic text-ink-faint">
+            Foydalanuvchilar topilmadi.
+          </p>
+        ) : null}
       </div>
     </div>
   );

@@ -1,47 +1,35 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import { useEffect, type ReactNode } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/store/auth-context';
-import { useRouter } from 'next/navigation';
-import { UserRole } from '@/types';
+import { roleHome } from '@/utils/navigation';
+import { LoadingState } from './loading-state';
+import type { UserRole } from '@/types';
 
-interface ProtectedRouteProps {
-  children: React.ReactNode;
+export function ProtectedRoute({
+  children,
+  allowedRoles,
+}: {
+  children: ReactNode;
   allowedRoles?: UserRole[];
-}
-
-export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles }) => {
+}) {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
+  const allowed = !!user && (!allowedRoles || allowedRoles.includes(user.role));
 
   useEffect(() => {
-    if (!loading) {
-      if (!user) {
-        router.push('/login');
-      } else if (allowedRoles && !allowedRoles.includes(user.role)) {
-        // User role is not permitted, redirect to home page
-        router.push('/');
-      }
-    }
-  }, [user, loading, allowedRoles, router]);
+    if (loading) return;
+    if (!user)
+      router.replace(
+        `/login?next=${encodeURIComponent(pathname + window.location.search)}`,
+      );
+    else if (!allowed) router.replace(roleHome(user.role));
+  }, [user, loading, allowed, pathname, router]);
 
-  // Loading animation spinner
-  if (loading) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-paper">
-        <div className="flex flex-col items-center gap-4">
-          <span className="h-10 w-10 rotate-45 animate-spin rounded-sm border-2 border-gold border-t-transparent" />
-          <p className="text-xs font-extrabold uppercase tracking-[0.25em] text-ink-faint">Yuklanmoqda...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Hide children if unauthenticated or role is not allowed
-  if (!user || (allowedRoles && !allowedRoles.includes(user.role))) {
-    return null;
-  }
-
+  if (loading || !allowed) return <LoadingState />;
   return <>{children}</>;
-};
+}
+
 export default ProtectedRoute;

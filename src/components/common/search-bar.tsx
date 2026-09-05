@@ -1,210 +1,220 @@
 'use client';
 
-import React from 'react';
-import { Search, MapPin, Users, Calendar, ArrowRight, Hotel, Wine, LayoutGrid, RotateCcw } from 'lucide-react';
-
-import { Region, District } from '@/types';
-
-interface SearchBarProps {
-  selectedRegion: string;
-  setSelectedRegion: (region: string) => void;
-  selectedDistrict: string;
-  setSelectedDistrict: (district: string) => void;
-  selectedCategory: 'all' | 'halls' | 'bars';
-  setSelectedCategory: (category: 'all' | 'halls' | 'bars') => void;
-  searchQuery: string;
-  setSearchQuery: (query: string) => void;
-  minCapacity: number;
-  setMinCapacity: (capacity: number) => void;
-  selectedDate: string;
-  setSelectedDate: (date: string) => void;
-  dbRegions?: Region[];
-  onResetFilters?: () => void;
-  onSearchSubmit?: () => void;
-}
+import { useState } from 'react';
+import {
+  ArrowRight,
+  Calendar,
+  Hotel,
+  LayoutGrid,
+  MapPin,
+  RotateCcw,
+  Search,
+  Users,
+  Wine,
+} from 'lucide-react';
+import type { Region } from '@/types';
+import { type CatalogFilters, EMPTY_FILTERS } from '@/utils/catalog';
+import { localDateString } from '@/utils/date';
+import { ErrorAlert } from './error-alert';
 
 export function SearchBar({
-  selectedRegion,
-  setSelectedRegion,
-  selectedDistrict,
-  setSelectedDistrict,
-  selectedCategory,
-  setSelectedCategory,
-  searchQuery,
-  setSearchQuery,
-  minCapacity,
-  setMinCapacity,
-  selectedDate,
-  setSelectedDate,
-  dbRegions = [],
-  onResetFilters,
-  onSearchSubmit,
-}: SearchBarProps) {
-  const selectedRegionObj = React.useMemo(() => {
-    if (!selectedRegion || !dbRegions.length) return null;
-    return dbRegions.find((r) => String(r.id) === selectedRegion) || null;
-  }, [selectedRegion, dbRegions]);
-
-  const districts: District[] = selectedRegionObj?.districts || [];
-
-  const handleRegionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const val = e.target.value;
-    setSelectedRegion(val);
-    setSelectedDistrict('');
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (onSearchSubmit) {
-      onSearchSubmit();
-    }
-  };
-
-  const hasActiveFilters = Boolean(
-    selectedRegion || selectedDistrict || searchQuery || minCapacity > 0 || selectedDate || selectedCategory !== 'all'
+  filters,
+  regions,
+  regionsLoading,
+  regionsError,
+  onRetryRegions,
+  onSearch,
+}: {
+  filters: CatalogFilters;
+  regions: Region[];
+  regionsLoading: boolean;
+  regionsError: boolean;
+  onRetryRegions: () => void;
+  onSearch: (filters: CatalogFilters) => void;
+}) {
+  const [draft, setDraft] = useState(filters);
+  const districts =
+    regions.find((region) => String(region.id) === draft.region)?.districts ||
+    [];
+  const set = <K extends keyof CatalogFilters>(
+    key: K,
+    value: CatalogFilters[K],
+  ) => setDraft((current) => ({ ...current, [key]: value }));
+  const hasFilters = Object.keys(EMPTY_FILTERS).some(
+    (key) =>
+      draft[key as keyof CatalogFilters] !==
+      EMPTY_FILTERS[key as keyof CatalogFilters],
   );
 
-  const categoryTabs = [
-    { id: 'all' as const, label: 'Barchasi', icon: LayoutGrid },
-    { id: 'halls' as const, label: 'To‘y zallari', icon: Hotel },
-    { id: 'bars' as const, label: 'Barlar', icon: Wine },
-  ];
-
   return (
-    <form onSubmit={handleSubmit} className="w-full">
-      <div className="card-lux overflow-hidden">
-        {/* Concierge strip */}
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line bg-gold-tint/60 px-5 py-3.5">
-          <div className="flex items-center gap-1.5 rounded-full border border-line-strong bg-surface p-1">
-            {categoryTabs.map((tab) => {
-              const Icon = tab.icon;
-              const isActive = selectedCategory === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  type="button"
-                  onClick={() => setSelectedCategory(tab.id)}
-                  className={`flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-extrabold transition-all ${
-                    isActive
-                      ? 'bg-gradient-to-br from-[#ecd49c] to-[#c9a35f] text-[#251b0c] shadow-[0_6px_14px_-6px_rgba(150,110,50,0.7)]'
-                      : 'text-ink-soft hover:text-ink'
-                  }`}
-                >
-                  <Icon className="h-3.5 w-3.5" />
-                  <span>{tab.label}</span>
-                </button>
-              );
-            })}
-          </div>
-
-          {hasActiveFilters && onResetFilters && (
+    <form
+      onSubmit={(event) => {
+        event.preventDefault();
+        onSearch(draft);
+      }}
+      className="card-lux overflow-hidden"
+      aria-label="Joy qidirish"
+    >
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line bg-gold-tint/60 px-3 py-3.5 sm:px-5">
+        <div
+          className="flex max-w-full items-center gap-1 rounded-full border border-line-strong bg-surface p-1"
+          role="group"
+          aria-label="Joy turi"
+        >
+          {(
+            [
+              { id: 'all', label: 'Barchasi', icon: LayoutGrid },
+              { id: 'halls', label: 'To‘y zallari', icon: Hotel },
+              { id: 'bars', label: 'Barlar', icon: Wine },
+            ] as const
+          ).map(({ id, label, icon: Icon }) => (
             <button
+              key={id}
               type="button"
-              onClick={onResetFilters}
-              className="flex items-center gap-1.5 rounded-full border border-danger/30 bg-danger/5 px-3.5 py-1.5 text-xs font-bold text-danger transition-colors hover:bg-danger/10"
+              aria-pressed={draft.category === id}
+              onClick={() => {
+                const next = { ...draft, category: id };
+                setDraft(next);
+                onSearch(next);
+              }}
+              className={`flex items-center gap-1.5 rounded-full px-2.5 py-2 text-xs font-bold sm:px-3.5 ${draft.category === id ? 'bg-gradient-to-br from-[#ecd49c] to-[#c9a35f] text-[#251b0c]' : 'text-ink-soft hover:bg-surface-2'}`}
             >
-              <RotateCcw className="h-3.5 w-3.5" />
-              <span>Filtrlarni tozalash</span>
+              <Icon className="h-3.5 w-3.5 shrink-0" />
+              {label}
             </button>
-          )}
+          ))}
         </div>
-
-        {/* Filters */}
-        <div className="grid grid-cols-1 gap-5 px-5 py-5 lg:grid-cols-12 lg:items-end">
-          {/* Location + search text */}
-          <div className="space-y-2.5 lg:col-span-5">
-            <label className="field-label flex items-center gap-1.5">
-              <MapPin className="h-3.5 w-3.5 text-gold" />
-              <span>Joylashuv va nom</span>
-            </label>
-            <div className="grid grid-cols-2 gap-2">
-              <select
-                value={selectedRegion}
-                onChange={handleRegionChange}
-                className="select-lux !py-2.5 !text-xs"
-              >
-                <option value="">Barcha viloyatlar</option>
-                {dbRegions.map((region) => (
-                  <option key={`r-${region.id}`} value={String(region.id)}>
-                    {region.name}
-                  </option>
-                ))}
-              </select>
-              <select
-                value={selectedDistrict}
-                disabled={!selectedRegion}
-                onChange={(e) => setSelectedDistrict(e.target.value)}
-                className="select-lux !py-2.5 !text-xs"
-              >
-                <option value="">Barcha tumanlar</option>
-                {districts.map((dist) => (
-                  <option key={`d-${dist.id}`} value={String(dist.id)}>
-                    {dist.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="relative flex items-center">
-              <Search className="absolute left-3.5 h-4 w-4 text-gold" />
-              <input
-                type="text"
-                placeholder="Qaysi zallarni qidiryapsiz?"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="input-lux !py-2.5 pl-10 !text-xs"
-              />
-            </div>
+        {hasFilters && (
+          <button
+            type="button"
+            onClick={() => {
+              setDraft(EMPTY_FILTERS);
+              onSearch(EMPTY_FILTERS);
+            }}
+            className="flex items-center gap-1.5 rounded-full border border-line px-3 py-2 text-xs font-bold text-ink-soft hover:border-gold"
+          >
+            <RotateCcw className="h-3.5 w-3.5" />
+            Filtrlarni tozalash
+          </button>
+        )}
+      </div>
+      <div className="grid grid-cols-1 gap-5 p-5 lg:grid-cols-12 lg:items-end">
+        <fieldset className="space-y-2.5 lg:col-span-5">
+          <legend className="field-label mb-2 flex items-center gap-1.5">
+            <MapPin className="h-4 w-4 text-gold" />
+            Joylashuv va nom
+          </legend>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            <select
+              aria-label="Viloyat"
+              value={draft.region}
+              disabled={regionsLoading || regionsError}
+              onChange={(e) =>
+                setDraft((current) => ({
+                  ...current,
+                  region: e.target.value,
+                  district: '',
+                }))
+              }
+              className="select-lux"
+            >
+              <option value="">
+                {regionsLoading ? 'Yuklanmoqda…' : 'Barcha viloyatlar'}
+              </option>
+              {regions.map((region) => (
+                <option key={region.id} value={region.id}>
+                  {region.name}
+                </option>
+              ))}
+            </select>
+            <select
+              aria-label="Tuman"
+              value={draft.district}
+              disabled={!draft.region || !districts.length}
+              onChange={(e) => set('district', e.target.value)}
+              className="select-lux"
+            >
+              <option value="">Barcha tumanlar</option>
+              {districts.map((district) => (
+                <option key={district.id} value={district.id}>
+                  {district.name}
+                </option>
+              ))}
+            </select>
           </div>
-
-          {/* Capacity */}
-          <div className="lg:col-span-3">
-            <div className="flex items-center justify-between">
-              <label className="field-label flex items-center gap-1.5">
-                <Users className="h-3.5 w-3.5 text-gold" />
-                <span>Minimal sig‘im</span>
-              </label>
-              <span className="text-xs font-extrabold text-gold-strong">
-                {minCapacity === 0 ? 'Barchasi' : `${minCapacity} kishi`}
-              </span>
-            </div>
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-3.5 top-3.5 h-4 w-4 text-gold" />
             <input
-              type="range"
-              min="0"
-              max="500"
-              step="50"
-              value={minCapacity}
-              onChange={(e) => setMinCapacity(parseInt(e.target.value))}
-              className="mt-4 h-1.5 w-full cursor-pointer appearance-none rounded-full bg-line-strong accent-[var(--gold)]"
-            />
-            <div className="mt-1 flex justify-between text-[10px] font-bold text-ink-faint">
-              <span>0</span>
-              <span>500+</span>
-            </div>
-          </div>
-
-          {/* Date */}
-          <div className="lg:col-span-2">
-            <label className="field-label mb-2.5 flex items-center gap-1.5">
-              <Calendar className="h-3.5 w-3.5 text-gold" />
-              <span>Tadbir sanasi</span>
-            </label>
-            <input
-              type="date"
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className="input-lux !py-2.5 !text-xs"
+              aria-label="Joy nomi"
+              type="search"
+              placeholder="Qaysi joyni qidiryapsiz?"
+              value={draft.search}
+              onChange={(e) => set('search', e.target.value)}
+              className="input-lux input-with-icon"
             />
           </div>
-
-          {/* Submit */}
-          <div className="lg:col-span-2">
-            <button type="submit" className="btn-gold w-full">
-              <span>Qidirish</span>
-              <ArrowRight className="h-4 w-4" />
-            </button>
+        </fieldset>
+        <div className="lg:col-span-3">
+          <label
+            htmlFor="min-capacity"
+            className="field-label flex items-center gap-1.5"
+          >
+            <Users className="h-4 w-4 text-gold" />
+            Minimal sig‘im
+          </label>
+          <output
+            htmlFor="min-capacity"
+            className="mt-2 block text-sm font-bold text-gold-strong"
+          >
+            {draft.min_capacity ? `${draft.min_capacity} kishi` : 'Barchasi'}
+          </output>
+          <input
+            id="min-capacity"
+            type="range"
+            min={0}
+            max={1000}
+            step={50}
+            value={draft.min_capacity}
+            onChange={(e) => set('min_capacity', Number(e.target.value))}
+            className="mt-3 w-full accent-[var(--gold)]"
+          />
+          <div className="flex justify-between text-xs text-ink-soft">
+            <span>0</span>
+            <span>1000</span>
           </div>
+        </div>
+        <div className="lg:col-span-2">
+          <label
+            htmlFor="event-date"
+            className="field-label mb-2 flex items-center gap-1.5"
+          >
+            <Calendar className="h-4 w-4 text-gold" />
+            Tadbir sanasi
+          </label>
+          <input
+            id="event-date"
+            type="date"
+            min={localDateString()}
+            value={draft.date}
+            onChange={(e) => set('date', e.target.value)}
+            className="input-lux"
+          />
+        </div>
+        <div className="lg:col-span-2">
+          <button type="submit" className="btn-gold w-full">
+            <span>Qidirish</span>
+            <ArrowRight className="h-4 w-4" />
+          </button>
         </div>
       </div>
+      {regionsError && (
+        <div className="px-5 pb-5">
+          <ErrorAlert
+            message="Hududlar yuklanmadi. Nom yoki sig‘im bo‘yicha qidirishingiz mumkin."
+            onRetry={onRetryRegions}
+          />
+        </div>
+      )}
     </form>
   );
 }
