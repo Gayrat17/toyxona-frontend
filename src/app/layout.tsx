@@ -17,7 +17,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="uz" className="h-full antialiased" suppressHydrationWarning>
+    <html lang="uz" className="h-full antialiased" data-scroll-behavior="smooth" suppressHydrationWarning>
       <head>
         {/* Apply saved theme before paint to avoid flash */}
         <script
