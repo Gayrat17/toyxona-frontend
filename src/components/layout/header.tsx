@@ -2,20 +2,23 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/store/auth-context';
-import { Hotel, Wine, LayoutGrid, LogOut, LogIn, Sun, Moon, Crown } from 'lucide-react';
+import { LogOut, LogIn, Sun, Moon, Crown } from 'lucide-react';
 
-export function Header() {
+interface HeaderProps {
+  onLogoClick?: () => void;
+}
+
+export function Header({ onLogoClick }: HeaderProps = {}) {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { user, logout } = useAuth();
   const [isDark, setIsDark] = React.useState(false);
   const [scrolled, setScrolled] = React.useState(false);
 
   React.useEffect(() => {
     setIsDark(document.documentElement.classList.contains('dark'));
-    const onScroll = () => setScrolled(window.scrollY > 12);
+    const onScroll = () => setScrolled(window.scrollY > 20);
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
@@ -35,26 +38,12 @@ export function Header() {
     }
   };
 
-  const currentCategory = searchParams.get('category') || 'all';
-
-  const handleCategorySelect = (category: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set('category', category);
-    router.push(`/?${params.toString()}`);
-  };
-
-  const navItems = [
-    { id: 'all', label: 'Barchasi', icon: LayoutGrid },
-    { id: 'halls', label: 'To‘y zallari', icon: Hotel },
-    { id: 'bars', label: 'Barlar', icon: Wine },
-  ];
-
   return (
     <header
-      className={`sticky top-0 z-40 w-full transition-all duration-300 ${
+      className={`sticky top-0 z-40 w-full transition-all duration-500 ${
         scrolled
-          ? 'bg-paper-soft/90 shadow-[0_10px_36px_-18px_rgba(64,48,20,0.35)] backdrop-blur-xl'
-          : 'bg-paper-soft/70 backdrop-blur-md'
+          ? 'bg-paper-soft/95 shadow-[0_12px_40px_-16px_rgba(64,48,20,0.45)] backdrop-blur-2xl border-b border-gold/20'
+          : 'bg-paper-soft/70 backdrop-blur-md border-b border-transparent'
       }`}
     >
       {/* Gold hairline under header */}
@@ -62,7 +51,18 @@ export function Header() {
 
       <div className="mx-auto flex h-18 max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
         {/* Brand — monogram + wordmark */}
-        <Link href="/" className="group flex items-center gap-3">
+        <Link
+          href="/"
+          onClick={(e) => {
+            e.preventDefault();
+            if (onLogoClick) {
+              onLogoClick();
+            } else {
+              router.push('/');
+            }
+          }}
+          className="group flex items-center gap-3 cursor-pointer"
+        >
           <span className="relative flex h-10 w-10 rotate-45 items-center justify-center border border-gold/70 bg-gradient-to-br from-[#ecd49c] to-[#b08d4f] shadow-[0_8px_18px_-8px_rgba(150,110,50,0.7)] transition-transform duration-300 group-hover:rotate-[50deg]">
             <span className="flex h-7 w-7 rotate-[-45deg] items-center justify-center border border-[#8a6a33]/50 bg-[#fffdf6]/90 dark:bg-[#211a10]/90">
               <Crown className="h-3.5 w-3.5 text-[#96743d]" />
@@ -77,31 +77,6 @@ export function Header() {
             </span>
           </span>
         </Link>
-
-        {/* Category navigation */}
-        <nav className="hidden items-center gap-1 md:flex">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = currentCategory === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => handleCategorySelect(item.id)}
-                className={`relative flex items-center gap-2 rounded-full px-4 py-2 text-[13px] font-bold tracking-wide transition-all ${
-                  isActive
-                    ? 'bg-gold-tint text-gold-strong'
-                    : 'text-ink-soft hover:bg-surface-2 hover:text-ink'
-                }`}
-              >
-                <Icon className={`h-4 w-4 ${isActive ? 'text-gold-strong' : 'text-ink-faint'}`} />
-                <span>{item.label}</span>
-                {isActive && (
-                  <span className="absolute -bottom-0.5 left-1/2 h-px w-6 -translate-x-1/2 bg-gold" />
-                )}
-              </button>
-            );
-          })}
-        </nav>
 
         {/* Actions */}
         <div className="flex items-center gap-2.5">

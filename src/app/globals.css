@@ -78,7 +78,19 @@
 }
 
 html {
-  scroll-behavior: smooth;
+  scroll-behavior: auto !important;
+}
+
+html.lenis, html.lenis-smooth {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-stopped {
+  overflow: clip;
 }
 
 body {
@@ -345,6 +357,13 @@ body {
   box-shadow: inset 0 1px 2px rgba(var(--shadow-warm), 0.07);
   transition: border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
 }
+.input-lux.has-icon-left {
+  padding-left: 2.75rem !important;
+}
+.input-lux.has-icon-right {
+  padding-right: 2.75rem !important;
+}
+
 .input-lux::placeholder {
   color: var(--ink-faint);
   font-weight: 500;
@@ -536,3 +555,46 @@ body {
 .arch-top {
   border-radius: 10rem 10rem 1rem 1rem;
 }
+
+/* ============================================================
+   INFINITE VENUE MARQUEE
+   Row 1: Left to right (chapdan o'ngga)
+   Row 2: Right to left (o'ngdan chapga)
+   ============================================================ */
+@keyframes marquee-to-right {
+  0% {
+    transform: translateX(-50%);
+  }
+  100% {
+    transform: translateX(0%);
+  }
+}
+
+@keyframes marquee-to-left {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee-right {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+  animation: marquee-to-right 45s linear infinite;
+}
+
+.animate-marquee-left {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+  animation: marquee-to-left 48s linear infinite;
+}
+
+.animate-marquee-right:hover,
+.animate-marquee-left:hover {
+  animation-play-state: paused;
+}
+

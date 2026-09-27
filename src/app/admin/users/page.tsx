@@ -60,8 +60,7 @@ export default function AdminUsersPage() {
           <div className="flex items-center gap-2.5 rounded-xl border border-danger/30 bg-danger/5 p-4 text-sm font-semibold text-danger">
             <AlertCircle className="h-5 w-5 shrink-0" />
             <span>
-              Foydalanuvchilarni yuklashda xatolik yuz berdi. Sinov rejimida mock ma&apos;lumotlar
-              yuklanishi mumkin.
+              Foydalanuvchilarni yuklashda xatolik yuz berdi. Backend server holatini tekshiring.
             </span>
           </div>
         )}

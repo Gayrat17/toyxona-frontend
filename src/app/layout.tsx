@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
 import "@fontsource-variable/playfair-display";
 import "@fontsource-variable/manrope";
+import "lenis/dist/lenis.css";
 import "./globals.css";
 import { AuthProvider } from "@/store/auth-context";
 import { QueryProvider } from "@/providers/query-provider";
+import { SmoothScrollProvider } from "@/components/providers/smooth-scroll";
+import { ScrollProgressBar } from "@/components/motion/scroll-progress";
 
 export const metadata: Metadata = {
   title: "TOYXONA — To'y zallari va barlar bron qilish platformasi",
@@ -17,7 +20,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="uz" className="h-full antialiased" data-scroll-behavior="smooth" suppressHydrationWarning>
+    <html lang="uz" className="antialiased" suppressHydrationWarning>
       <head>
         {/* Apply saved theme before paint to avoid flash */}
         <script
@@ -27,8 +30,12 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-full flex flex-col bg-paper text-ink font-sans">
+        {/* Gold scroll-depth progress bar fixed at top of viewport */}
+        <ScrollProgressBar />
         <QueryProvider>
-          <AuthProvider>{children}</AuthProvider>
+          <AuthProvider>
+            <SmoothScrollProvider>{children}</SmoothScrollProvider>
+          </AuthProvider>
         </QueryProvider>
       </body>
     </html>
