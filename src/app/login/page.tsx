@@ -7,13 +7,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Phone, Lock, Eye, EyeOff, AlertCircle, Crown, ArrowLeft, LogIn,
 } from 'lucide-react';
-
-const STAR_LATTICE =
-  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='84' height='84' viewBox='0 0 84 84'%3E%3Cg fill='none' stroke='%23cda964' stroke-width='1'%3E%3Crect x='26' y='26' width='32' height='32'/%3E%3Crect x='26' y='26' width='32' height='32' transform='rotate(45 42 42)'/%3E%3Ccircle cx='42' cy='42' r='4.5'/%3E%3C/g%3E%3C/svg%3E\")";
+import { useUzbekPhoneInput } from '@/hooks/useUzbekPhoneInput';
+import { STAR_LATTICE_PATTERN } from '@/constants/decoration';
 
 export default function LoginPage() {
   const { login, loading } = useAuth();
-  const [phoneNumber, setPhoneNumber] = useState('');
+  const phone = useUzbekPhoneInput();
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -22,19 +21,23 @@ export default function LoginPage() {
     e.preventDefault();
     setError(null);
 
-    if (!phoneNumber || !password) {
-      setError('Telefon raqami va parolni kiritish shart.');
+    if (!phone.isValid()) {
+      setError("Telefon raqami to'liq kiritilishi shart (masalan: +998 90 123 45 67).");
+      return;
+    }
+    if (!password) {
+      setError('Parolni kiritish shart.');
       return;
     }
 
     try {
-      await login(phoneNumber, password);
-    } catch (err: any) {
-      console.error(err);
-      if (err.response?.data?.detail) {
-        setError(err.response.data.detail);
-      } else if (err.response?.data?.non_field_errors) {
-        setError(err.response.data.non_field_errors[0]);
+      await login(phone.toE164(), password);
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { detail?: string; non_field_errors?: string[] } } };
+      if (axiosErr.response?.data?.detail) {
+        setError(axiosErr.response.data.detail);
+      } else if (axiosErr.response?.data?.non_field_errors) {
+        setError(axiosErr.response.data.non_field_errors[0]);
       } else {
         setError("Telefon raqami yoki parol noto'g'ri.");
       }
@@ -53,7 +56,7 @@ export default function LoginPage() {
         <div className="absolute inset-0 bg-gradient-to-b from-espresso/75 via-espresso/45 to-espresso/92" />
         <div
           className="absolute inset-0 opacity-[0.08]"
-          style={{ backgroundImage: STAR_LATTICE }}
+          style={{ backgroundImage: STAR_LATTICE_PATTERN }}
         />
 
         <div className="relative z-[2] flex h-full flex-col justify-between p-10">
@@ -167,13 +170,17 @@ export default function LoginPage() {
                     <input
                       id="phone-number"
                       name="phoneNumber"
-                      type="text"
+                      type="tel"
+                      inputMode="numeric"
                       required
                       placeholder="+998 90 123 45 67"
-                      value={phoneNumber}
-                      onChange={(e) => setPhoneNumber(e.target.value)}
+                      value={phone.value}
+                      onChange={phone.handleChange}
+                      onKeyDown={phone.handleKeyDown}
+                      onFocus={phone.handleFocus}
+                      onClick={phone.handleClick}
                       aria-label="Telefon raqam"
-                      className="input-lux has-icon-left h-11 !pl-11 !pr-4 !py-0"
+                      className="input-lux has-icon-left h-11 !pl-11 !pr-4 !py-0 font-medium"
                     />
                   </div>
                 </div>
@@ -199,12 +206,10 @@ export default function LoginPage() {
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      aria-label={showPassword ? 'Parolni yashirish' : "Parolni ko\u2018rsatish"}
+                      aria-label={showPassword ? 'Parolni yashirish' : "Parolni ko'rsatish"}
                       className="absolute right-3.5 flex h-7 w-7 items-center justify-center text-ink-faint transition-colors hover:text-gold-strong focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/50 rounded"
                     >
-                      {showPassword
-                        ? <EyeOff className="h-4 w-4" />
-                        : <Eye className="h-4 w-4" />}
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
                 </div>

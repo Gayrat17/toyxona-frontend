@@ -8,61 +8,98 @@ import {
   Phone, Lock, Eye, EyeOff, User as UserIcon, Shield,
   AlertCircle, Crown, ArrowLeft, UserPlus,
 } from 'lucide-react';
-
-const STAR_LATTICE =
-  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='84' height='84' viewBox='0 0 84 84'%3E%3Cg fill='none' stroke='%23cda964' stroke-width='1'%3E%3Crect x='26' y='26' width='32' height='32'/%3E%3Crect x='26' y='26' width='32' height='32' transform='rotate(45 42 42)'/%3E%3Ccircle cx='42' cy='42' r='4.5'/%3E%3C/g%3E%3C/svg%3E\")";
+import { useUzbekPhoneInput } from '@/hooks/useUzbekPhoneInput';
+import { STAR_LATTICE_PATTERN } from '@/constants/decoration';
 
 export default function RegisterPage() {
   const { register, loading } = useAuth();
-  const [phoneNumber, setPhoneNumber] = useState('');
+  const phone = useUzbekPhoneInput();
   const [firstName, setFirstName] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState<'CLIENT' | 'VENUE_OWNER'>('CLIENT');
   const [error, setError] = useState<string | null>(null);
 
+  const handleNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!e.ctrlKey && !e.metaKey && !e.altKey && /^[0-9]$/.test(e.key)) {
+      e.preventDefault();
+    }
+  };
+
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFirstName(e.target.value.replace(/[0-9]/g, ''));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
-    if (!phoneNumber || !firstName || !password) {
-      setError("Barcha maydonlarni to'ldirish shart.");
+    if (!firstName.trim()) {
+      setError("Ismingizni kiritish shart.");
+      return;
+    }
+    if (!phone.isValid()) {
+      setError("Telefon raqami to'liq kiritilishi shart (masalan: +998 90 123 45 67).");
+      return;
+    }
+    if (!password) {
+      setError("Parolni kiritish shart.");
+      return;
+    }
+    if (password.length < 8) {
+      setError("Parol kamida 8 ta belgidan iborat bo'lishi shart.");
+      return;
+    }
+    if (/^\d+$/.test(password)) {
+      setError("Parol faqat raqamlardan iborat bo'lishi mumkin emas. Kamida bitta harf bo'lishi kerak.");
       return;
     }
 
     try {
-      await register(phoneNumber, firstName, password, role);
-    } catch (err: any) {
-      console.error(err);
-      if (err.response?.data?.phone_number) {
-        const msg = Array.isArray(err.response.data.phone_number)
-          ? err.response.data.phone_number[0]
-          : err.response.data.phone_number;
-        setError(
-          msg.includes('exists') || msg.includes('already') || msg.includes('mavjud')
-            ? "Ushbu telefon raqami allaqachon ro'yxatdan o'tgan."
-            : msg
-        );
-      } else if (err.response?.data?.password) {
-        setError(
-          Array.isArray(err.response.data.password)
-            ? err.response.data.password[0]
-            : err.response.data.password
-        );
-      } else if (err.response?.data?.re_password) {
-        setError(
-          Array.isArray(err.response.data.re_password)
-            ? err.response.data.re_password[0]
-            : err.response.data.re_password
-        );
-      } else if (err.response?.data?.detail) {
-        setError(err.response.data.detail);
-      } else if (err.response?.data && typeof err.response.data === 'object') {
-        const firstKey = Object.keys(err.response.data)[0];
-        const val = err.response.data[firstKey];
-        setError(`${firstKey}: ${Array.isArray(val) ? val[0] : val}`);
-      } else {
+      await register(phone.toE164(), firstName.trim(), password, role);
+    } catch (err: unknown) {
+      const axiosErr = err as {
+        response?: {
+          data?: Record<string, string | string[]>;
+        };
+      };
+      const data = axiosErr.response?.data;
+      if (!data) {
         setError("Ro'yxatdan o'tishda xatolik yuz berdi. Iltimos qaytadan urining.");
+        return;
+      }
+
+      if (data.phone_number) {
+        const msg = Array.isArray(data.phone_number) ? data.phone_number[0] : data.phone_number;
+        if (/already|exists|mavjud/i.test(msg)) {
+          setError("Ushbu telefon raqami allaqachon ro'yxatdan o'tgan. Iltimos, tizimga kiring.");
+        } else {
+          setError(msg);
+        }
+      } else if (data.password) {
+        const errors = Array.isArray(data.password) ? data.password : [data.password];
+        const combined = errors.join(' ');
+        if (/least 8|too short|kamida 8/i.test(combined)) {
+          setError("Parol kamida 8 ta belgidan iborat bo'lishi kerak.");
+        } else if (/numeric|faqat raqam/i.test(combined)) {
+          setError("Parol faqat raqamlardan iborat bo'lishi mumkin emas. Harflardan ham foydalaning.");
+        } else if (/common|keng tarqalgan/i.test(combined)) {
+          setError("Bu parol juda oddiy va keng tarqalgan. Murakkabroq parol tanlang.");
+        } else {
+          setError(errors[0]);
+        }
+      } else if (data.re_password) {
+        const msg = Array.isArray(data.re_password) ? data.re_password[0] : data.re_password;
+        setError(msg);
+      } else if (data.non_field_errors) {
+        const msg = Array.isArray(data.non_field_errors) ? data.non_field_errors[0] : data.non_field_errors;
+        setError(msg);
+      } else if (data.detail) {
+        setError(data.detail as string);
+      } else {
+        const firstKey = Object.keys(data)[0];
+        const val = data[firstKey];
+        setError(`${firstKey}: ${Array.isArray(val) ? val[0] : val}`);
       }
     }
   };
@@ -79,7 +116,7 @@ export default function RegisterPage() {
         <div className="absolute inset-0 bg-gradient-to-b from-espresso/75 via-espresso/45 to-espresso/92" />
         <div
           className="absolute inset-0 opacity-[0.08]"
-          style={{ backgroundImage: STAR_LATTICE }}
+          style={{ backgroundImage: STAR_LATTICE_PATTERN }}
         />
 
         <div className="relative z-[2] flex h-full flex-col justify-between p-10">
@@ -112,8 +149,8 @@ export default function RegisterPage() {
               <span className="gold-text italic">minglar orzusi</span>
             </p>
             <p className="mt-3 max-w-xs text-[13px] leading-relaxed text-[#cbbc9c]">
-              Ro&apos;yxatdan o&apos;ting, zalingizni katalogga qo&apos;shing
-              va birinchi bronlaringizni qabul qila boshlang.
+              Platformamizda zalingizni ro&apos;yxatdan o&apos;tkazing va minglab juftliklarga
+              o&apos;z joyingizni taklif eting.
             </p>
           </div>
 
@@ -126,8 +163,7 @@ export default function RegisterPage() {
       {/* ── Right: form panel ─────────────────────────────────────── */}
       <div className="pattern-weave flex flex-1 flex-col overflow-y-auto">
         <div className="flex flex-1 flex-col items-center justify-center px-4 py-8 sm:px-8">
-          <div className="w-full max-w-[420px]">
-            {/* Back link */}
+          <div className="w-full max-w-[400px]">
             <Link
               href="/"
               className="mb-5 inline-flex items-center gap-1.5 text-[11px] font-bold text-ink-faint transition-colors hover:text-gold-strong"
@@ -136,24 +172,23 @@ export default function RegisterPage() {
               Bosh sahifaga qaytish
             </Link>
 
-            {/* Form card */}
             <motion.div
               className="card-lux p-6 sm:p-7"
               initial={{ opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
             >
-              {/* Header — inline icon + title */}
+              {/* Header */}
               <div className="flex items-center gap-3.5">
                 <span className="flex h-10 w-10 shrink-0 rotate-45 items-center justify-center border border-gold/50 bg-gold-tint">
                   <Crown className="h-4 w-4 rotate-[-45deg] text-gold-strong" />
                 </span>
                 <div>
                   <h2 className="font-display text-[22px] font-bold leading-tight text-ink">
-                    A&apos;zo bo&apos;lish
+                    Ro&apos;yxatdan o&apos;tish
                   </h2>
                   <p className="mt-0.5 text-[12px] font-medium text-ink-soft">
-                    Katta imkoniyatlar uchun profil yarating
+                    Yangi hisob yaratish
                   </p>
                 </div>
               </div>
@@ -165,7 +200,7 @@ export default function RegisterPage() {
                 <span className="h-px flex-1 bg-gradient-to-l from-transparent to-gold/50" />
               </div>
 
-              {/* Error banner */}
+              {/* Error */}
               <AnimatePresence>
                 {error && (
                   <motion.div
@@ -181,13 +216,11 @@ export default function RegisterPage() {
                 )}
               </AnimatePresence>
 
-              {/* ── Form ─────────────────────────────────────────── */}
-              <form className="mt-5" onSubmit={handleSubmit}>
-                {/* First Name */}
+              {/* Form */}
+              <form className="mt-5 space-y-4" onSubmit={handleSubmit}>
+                {/* Name */}
                 <div>
-                  <label htmlFor="first-name" className="field-label">
-                    Ismingiz
-                  </label>
+                  <label htmlFor="first-name" className="field-label">Ism</label>
                   <div className="relative mt-1.5 flex items-center">
                     <UserIcon className="pointer-events-none absolute left-3.5 h-4 w-4 text-gold" />
                     <input
@@ -195,41 +228,42 @@ export default function RegisterPage() {
                       name="firstName"
                       type="text"
                       required
-                      placeholder="Ali"
+                      placeholder="Ismingiz"
                       value={firstName}
-                      onChange={(e) => setFirstName(e.target.value)}
-                      aria-label="Ismingiz"
+                      onChange={handleNameChange}
+                      onKeyDown={handleNameKeyDown}
+                      aria-label="Ism"
                       className="input-lux has-icon-left h-11 !pl-11 !pr-4 !py-0"
                     />
                   </div>
                 </div>
 
                 {/* Phone */}
-                <div className="mt-3">
-                  <label htmlFor="phone-number" className="field-label">
-                    Telefon raqam
-                  </label>
+                <div>
+                  <label htmlFor="phone-number" className="field-label">Telefon raqam</label>
                   <div className="relative mt-1.5 flex items-center">
                     <Phone className="pointer-events-none absolute left-3.5 h-4 w-4 text-gold" />
                     <input
                       id="phone-number"
                       name="phoneNumber"
-                      type="text"
+                      type="tel"
+                      inputMode="numeric"
                       required
                       placeholder="+998 90 123 45 67"
-                      value={phoneNumber}
-                      onChange={(e) => setPhoneNumber(e.target.value)}
+                      value={phone.value}
+                      onChange={phone.handleChange}
+                      onKeyDown={phone.handleKeyDown}
+                      onFocus={phone.handleFocus}
+                      onClick={phone.handleClick}
                       aria-label="Telefon raqam"
-                      className="input-lux has-icon-left h-11 !pl-11 !pr-4 !py-0"
+                      className="input-lux has-icon-left h-11 !pl-11 !pr-4 !py-0 font-medium"
                     />
                   </div>
                 </div>
 
                 {/* Password */}
-                <div className="mt-3">
-                  <label htmlFor="password" className="field-label">
-                    Parol
-                  </label>
+                <div>
+                  <label htmlFor="password" className="field-label">Parol</label>
                   <div className="relative mt-1.5 flex items-center">
                     <Lock className="pointer-events-none absolute left-3.5 h-4 w-4 text-gold" />
                     <input
@@ -237,7 +271,7 @@ export default function RegisterPage() {
                       name="password"
                       type={showPassword ? 'text' : 'password'}
                       required
-                      placeholder="••••••••"
+                      placeholder="Kamida 8 ta belgi"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       aria-label="Parol"
@@ -246,49 +280,38 @@ export default function RegisterPage() {
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      aria-label={showPassword ? "Parolni yashirish" : "Parolni ko\u2018rsatish"}
+                      aria-label={showPassword ? 'Parolni yashirish' : "Parolni ko'rsatish"}
                       className="absolute right-3.5 flex h-7 w-7 items-center justify-center text-ink-faint transition-colors hover:text-gold-strong focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/50 rounded"
                     >
-                      {showPassword
-                        ? <EyeOff className="h-4 w-4" />
-                        : <Eye className="h-4 w-4" />}
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
                 </div>
 
-                {/* Role selector — compact horizontal toggle */}
-                <div className="mt-3">
-                  <span className="field-label">Rolingizni tanlang</span>
-                  <div className="mt-1.5 grid grid-cols-2 gap-2">
-                    {/* CLIENT */}
-                    <button
-                      type="button"
-                      onClick={() => setRole('CLIENT')}
-                      aria-pressed={role === 'CLIENT'}
-                      className={`flex items-center gap-2 rounded-xl border px-3 py-2.5 text-[12px] font-bold transition-all ${
-                        role === 'CLIENT'
-                          ? 'border-gold bg-gold-tint text-gold-strong shadow-[0_8px_18px_-10px_rgba(150,110,50,0.55)]'
-                          : 'border-line bg-surface text-ink-soft hover:border-gold/40 hover:text-ink'
-                      }`}
-                    >
-                      <UserIcon className={`h-4 w-4 shrink-0 ${role === 'CLIENT' ? 'text-gold-strong' : 'text-ink-faint'}`} />
-                      <span>Mijoz</span>
-                    </button>
-
-                    {/* VENUE_OWNER */}
-                    <button
-                      type="button"
-                      onClick={() => setRole('VENUE_OWNER')}
-                      aria-pressed={role === 'VENUE_OWNER'}
-                      className={`flex items-center gap-2 rounded-xl border px-3 py-2.5 text-[12px] font-bold transition-all ${
-                        role === 'VENUE_OWNER'
-                          ? 'border-gold bg-gold-tint text-gold-strong shadow-[0_8px_18px_-10px_rgba(150,110,50,0.55)]'
-                          : 'border-line bg-surface text-ink-soft hover:border-gold/40 hover:text-ink'
-                      }`}
-                    >
-                      <Shield className={`h-4 w-4 shrink-0 ${role === 'VENUE_OWNER' ? 'text-gold-strong' : 'text-ink-faint'}`} />
-                      <span>Joy egasi</span>
-                    </button>
+                {/* Role selector */}
+                <div>
+                  <p className="field-label mb-2">Rolni tanlang</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {(
+                      [
+                        { value: 'CLIENT', label: 'Mijoz', icon: UserIcon },
+                        { value: 'VENUE_OWNER', label: 'Joy egasi', icon: Shield },
+                      ] as const
+                    ).map(({ value: v, label, icon: Icon }) => (
+                      <button
+                        key={v}
+                        type="button"
+                        onClick={() => setRole(v)}
+                        className={`flex items-center justify-center gap-2 rounded-xl border py-2.5 text-[12px] font-bold transition-all ${
+                          role === v
+                            ? 'border-gold bg-gold-tint text-gold-strong'
+                            : 'border-line bg-surface text-ink-soft hover:border-gold/50'
+                        }`}
+                      >
+                        <Icon className="h-3.5 w-3.5" />
+                        {label}
+                      </button>
+                    ))}
                   </div>
                 </div>
 
@@ -296,7 +319,7 @@ export default function RegisterPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="btn-gold mt-5 w-full !py-3 !text-[13px] flex items-center justify-center gap-2"
+                  className="btn-gold mt-2 w-full !py-3 !text-[13px] flex items-center justify-center gap-2"
                 >
                   {loading ? (
                     <span className="h-4 w-4 animate-spin rounded-full border-2 border-[#251b0c] border-t-transparent" />
@@ -309,14 +332,14 @@ export default function RegisterPage() {
                 </button>
               </form>
 
-              {/* Switch to login */}
-              <div className="mt-4 border-t border-dashed border-line pt-4 text-center text-[12px] font-semibold text-ink-soft">
+              {/* Switch link */}
+              <div className="mt-5 border-t border-dashed border-line pt-4 text-center text-[12px] font-semibold text-ink-soft">
                 Hisobingiz bormi?{' '}
                 <Link
                   href="/login"
                   className="font-extrabold text-gold-strong transition-colors hover:text-gold"
                 >
-                  Tizimga kiring
+                  Kirish
                 </Link>
               </div>
             </motion.div>

@@ -593,8 +593,3 @@ body {
   animation: marquee-to-left 48s linear infinite;
 }
 
-.animate-marquee-right:hover,
-.animate-marquee-left:hover {
-  animation-play-state: paused;
-}
-

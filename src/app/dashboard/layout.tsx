@@ -27,9 +27,12 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
   ];
 
   return (
-    <div className="flex h-screen overflow-hidden bg-paper font-sans">
+    <div
+      data-lenis-prevent
+      className="flex h-screen h-[100dvh] overflow-hidden bg-paper font-sans"
+    >
       {/* ============ Sidebar ============ */}
-      <aside className="texture-grain relative flex w-64 shrink-0 flex-col border-r border-gold/15 bg-espresso text-[#e9dfc9]">
+      <aside className="texture-grain relative flex h-full w-64 shrink-0 flex-col border-r border-gold/15 bg-espresso text-[#e9dfc9]">
         <div
           className="pointer-events-none absolute inset-0 opacity-[0.06]"
           style={{
@@ -52,7 +55,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
         </div>
 
         {/* Nav */}
-        <nav className="relative z-[2] flex-1 space-y-1 px-4 py-6">
+        <nav className="relative z-[2] flex-1 overflow-y-auto space-y-1 px-4 py-6">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href || (item.href === '/dashboard/venues' && pathname === '/dashboard');
@@ -77,7 +80,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
         </nav>
 
         {/* User */}
-        <div className="relative z-[2] border-t border-gold/15 p-4">
+        <div className="relative z-[2] shrink-0 border-t border-gold/15 p-4">
           <div className="flex items-center gap-3 rounded-xl border border-gold/10 bg-white/5 p-3">
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#ecd49c] to-[#b08d4f] text-sm font-black text-[#251b0c]">
               {(user?.first_name || 'J').charAt(0).toUpperCase()}
@@ -98,7 +101,10 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* ============ Main panel ============ */}
-      <main className="flex min-w-0 flex-1 flex-col overflow-y-auto">
+      <main
+        data-lenis-prevent
+        className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overscroll-contain"
+      >
         <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between border-b border-line bg-paper-soft/90 px-8 backdrop-blur-md">
           <h2 className="font-display text-lg font-bold text-ink">
             {pathname === '/dashboard/add' && "Yangi joy qo'shish"}

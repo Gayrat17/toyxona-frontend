@@ -29,7 +29,7 @@ export const fetchHallsRequest = async (
   my_venues?: boolean,
   filters?: VenueFilterParams
 ): Promise<PaginatedResponse<WeddingHall>> => {
-  const params: any = { page, ...filters };
+  const params: Record<string, string | number | boolean> = { page, ...filters };
   if (my_venues) params.my_venues = true;
   const response = await api.get('/venues/halls/', { params });
   if (Array.isArray(response.data)) {
@@ -59,7 +59,7 @@ export const fetchBarsRequest = async (
   my_venues?: boolean,
   filters?: VenueFilterParams
 ): Promise<PaginatedResponse<Bar>> => {
-  const params: any = { page, ...filters };
+  const params: Record<string, string | number | boolean> = { page, ...filters };
   if (my_venues) params.my_venues = true;
   const response = await api.get('/venues/bars/', { params });
   if (Array.isArray(response.data)) {

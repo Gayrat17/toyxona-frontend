@@ -1,5 +1,6 @@
 import { api } from './api';
 import { User } from '../types';
+import { UserRole } from '../types';
 
 /**
  * Formats user phone number to standard +998XXXXXXXXX format.
@@ -15,14 +16,24 @@ export const formatPhoneNumber = (phone: string): string => {
   return cleaned;
 };
 
+export interface RegisterData {
+  phone_number: string;
+  first_name: string;
+  password: string;
+  re_password: string;
+  role: UserRole;
+  last_name?: string;
+  email?: string;
+}
+
 /**
  * Sends a request to retrieve JWT access and refresh tokens.
  */
 export const loginRequest = async (phone_number: string, password: string) => {
   const formattedPhone = formatPhoneNumber(phone_number);
-  const response = await api.post('/auth/jwt/create/', { 
-    phone_number: formattedPhone, 
-    password 
+  const response = await api.post('/auth/jwt/create/', {
+    phone_number: formattedPhone,
+    password,
   });
   return response.data; // Expected output: { access: string, refresh: string }
 };
@@ -30,10 +41,12 @@ export const loginRequest = async (phone_number: string, password: string) => {
 /**
  * Registers a new user.
  */
-export const registerRequest = async (userData: any) => {
-  const formattedData = {
+export const registerRequest = async (userData: RegisterData) => {
+  const formattedData: RegisterData = {
     ...userData,
-    phone_number: userData.phone_number ? formatPhoneNumber(userData.phone_number) : userData.phone_number
+    phone_number: userData.phone_number
+      ? formatPhoneNumber(userData.phone_number)
+      : userData.phone_number,
   };
   const response = await api.post('/auth/users/', formattedData);
   return response.data; // Returns created User object

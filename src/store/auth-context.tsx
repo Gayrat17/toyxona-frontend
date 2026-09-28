@@ -1,15 +1,15 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User } from '@/types';
-import { loginRequest, registerRequest, fetchMeRequest } from '@/services/auth';
+import { User, UserRole } from '@/types';
+import { loginRequest, registerRequest, fetchMeRequest, RegisterData } from '@/services/auth';
 import { useRouter } from 'next/navigation';
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (phone_number: string, password: string) => Promise<void>;
-  register: (phone_number: string, first_name: string, password: string, role: string) => Promise<void>;
+  register: (phone_number: string, first_name: string, password: string, role: UserRole) => Promise<void>;
   logout: () => void;
 }
 
@@ -78,7 +78,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const register = async (phone_number: string, first_name: string, password: string, role: string) => {
+  const register = async (phone_number: string, first_name: string, password: string, role: UserRole) => {
     setLoading(true);
     try {
       await registerRequest({ phone_number, first_name, password, re_password: password, role });

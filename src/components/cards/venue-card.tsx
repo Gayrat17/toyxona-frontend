@@ -6,6 +6,7 @@ import { getMediaUrl } from '@/utils/media';
 
 interface VenueCardProps {
   venue: WeddingHall | Bar;
+  compact?: boolean;
 }
 
 function getVenueCover(venue: WeddingHall | Bar): string | null {
@@ -19,7 +20,7 @@ function getVenueCover(venue: WeddingHall | Bar): string | null {
   return null;
 }
 
-export const VenueCard: React.FC<VenueCardProps> = ({ venue }) => {
+export const VenueCard: React.FC<VenueCardProps> = ({ venue, compact = false }) => {
   const isHall = 'max_capacity' in venue;
   const id = venue.id;
   const name = venue.name;
@@ -37,7 +38,7 @@ export const VenueCard: React.FC<VenueCardProps> = ({ venue }) => {
     <Link href={linkPath} className="group block">
       <div className="card-lux card-lux-hover h-full overflow-hidden">
         {/* Media */}
-        <div className="relative h-56 w-full overflow-hidden">
+        <div className={`relative w-full overflow-hidden ${compact ? 'h-40 sm:h-44' : 'h-48 sm:h-52'}`}>
           {coverUrl ? (
             <img
               src={coverUrl}
@@ -91,32 +92,40 @@ export const VenueCard: React.FC<VenueCardProps> = ({ venue }) => {
         </div>
 
         {/* Body */}
-        <div className="flex flex-col p-5">
-          <div className="flex items-start justify-between gap-3">
-            <h3 className="font-display text-xl font-bold leading-snug text-ink transition-colors group-hover:text-gold-strong">
+        <div className={`flex flex-col ${compact ? 'p-3.5 sm:p-4' : 'p-4 sm:p-5'}`}>
+          <div className="flex items-start justify-between gap-2.5">
+            <h3 className={`font-display font-bold leading-snug text-ink transition-colors group-hover:text-gold-strong ${
+              compact ? 'text-base sm:text-lg' : 'text-xl'
+            }`}>
               {name}
             </h3>
-            <span className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-line text-ink-faint transition-all duration-300 group-hover:border-gold group-hover:bg-gold group-hover:text-espresso">
-              <ArrowUpRight className="h-4 w-4" />
+            <span className={`mt-0.5 flex shrink-0 items-center justify-center rounded-full border border-line text-ink-faint transition-all duration-300 group-hover:border-gold group-hover:bg-gold group-hover:text-espresso ${
+              compact ? 'h-7 w-7' : 'h-8 w-8'
+            }`}>
+              <ArrowUpRight className={compact ? 'h-3.5 w-3.5' : 'h-4 w-4'} />
             </span>
           </div>
 
-          <div className="mt-2 flex items-center gap-1.5 text-[13px] text-ink-faint">
+          <div className={`flex items-center gap-1.5 text-ink-faint ${compact ? 'mt-1.5 text-[12px]' : 'mt-2 text-[13px]'}`}>
             <MapPin className="h-3.5 w-3.5 shrink-0 text-gold" />
             <span className="line-clamp-1">{address}</span>
           </div>
 
-          <div className="mt-4 flex items-center justify-between border-t border-dashed border-line pt-4">
+          <div className={`flex items-center justify-between border-t border-dashed border-line ${
+            compact ? 'mt-2.5 pt-2.5' : 'mt-3.5 pt-3.5'
+          }`}>
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-ink-faint">
                 {isHall ? 'Narxlar' : 'Soatbay narx'}
               </p>
-              <p className="mt-0.5 text-sm font-extrabold text-ink">{priceFormatted}</p>
+              <p className={`mt-0.5 font-extrabold text-ink ${compact ? 'text-xs sm:text-[13px]' : 'text-sm'}`}>
+                {priceFormatted}
+              </p>
             </div>
             {isHall && (
               <div className="text-right">
                 <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-ink-faint">Zakalat</p>
-                <p className="mt-0.5 text-sm font-extrabold text-success">
+                <p className={`mt-0.5 font-extrabold text-success ${compact ? 'text-xs sm:text-[13px]' : 'text-sm'}`}>
                   {parseFloat((venue as WeddingHall).required_deposit).toLocaleString('uz-UZ')} UZS
                 </p>
               </div>

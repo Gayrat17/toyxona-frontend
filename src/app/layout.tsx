@@ -29,7 +29,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="min-h-full flex flex-col bg-paper text-ink font-sans">
+      <body className="min-h-full flex flex-col bg-paper text-ink font-sans" suppressHydrationWarning>
         {/* Gold scroll-depth progress bar fixed at top of viewport */}
         <ScrollProgressBar />
         <QueryProvider>
