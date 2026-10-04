@@ -11,14 +11,30 @@ import {
 import { useUzbekPhoneInput } from '@/hooks/useUzbekPhoneInput';
 import { STAR_LATTICE_PATTERN } from '@/constants/decoration';
 
+import { useRouter } from 'next/navigation';
+
 export default function RegisterPage() {
-  const { register, loading } = useAuth();
+  const { register, loading, user } = useAuth();
+  const router = useRouter();
   const phone = useUzbekPhoneInput();
   const [firstName, setFirstName] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState<'CLIENT' | 'VENUE_OWNER'>('CLIENT');
   const [error, setError] = useState<string | null>(null);
+
+  // If user is already authenticated, redirect to appropriate page
+  React.useEffect(() => {
+    if (!loading && user) {
+      if (user.role === 'ADMIN') {
+        router.replace('/admin/dashboard');
+      } else if (user.role === 'VENUE_OWNER') {
+        router.replace('/dashboard');
+      } else {
+        router.replace('/');
+      }
+    }
+  }, [user, loading, router]);
 
   const handleNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (!e.ctrlKey && !e.metaKey && !e.altKey && /^[0-9]$/.test(e.key)) {

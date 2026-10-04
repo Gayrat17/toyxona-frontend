@@ -10,12 +10,28 @@ import {
 import { useUzbekPhoneInput } from '@/hooks/useUzbekPhoneInput';
 import { STAR_LATTICE_PATTERN } from '@/constants/decoration';
 
+import { useRouter } from 'next/navigation';
+
 export default function LoginPage() {
-  const { login, loading } = useAuth();
+  const { login, loading, user } = useAuth();
+  const router = useRouter();
   const phone = useUzbekPhoneInput();
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // If user is already authenticated, redirect to appropriate page
+  React.useEffect(() => {
+    if (!loading && user) {
+      if (user.role === 'ADMIN') {
+        router.replace('/admin/dashboard');
+      } else if (user.role === 'VENUE_OWNER') {
+        router.replace('/dashboard');
+      } else {
+        router.replace('/');
+      }
+    }
+  }, [user, loading, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,7 +51,12 @@ export default function LoginPage() {
     } catch (err: unknown) {
       const axiosErr = err as { response?: { data?: { detail?: string; non_field_errors?: string[] } } };
       if (axiosErr.response?.data?.detail) {
-        setError(axiosErr.response.data.detail);
+        const detail = axiosErr.response.data.detail;
+        if (detail.includes('No active account') || detail.includes('credentials')) {
+          setError("Telefon raqami yoki parol noto'g'ri.");
+        } else {
+          setError(detail);
+        }
       } else if (axiosErr.response?.data?.non_field_errors) {
         setError(axiosErr.response.data.non_field_errors[0]);
       } else {

@@ -167,6 +167,7 @@ function HomeContent() {
     queryKey: ['platformStats'],
     queryFn: fetchPlatformStatsRequest,
     staleTime: 30000,
+    retry: false,
   });
 
   const repeatedHallsHalf = getRepeatedHalf(hallsList, 8);

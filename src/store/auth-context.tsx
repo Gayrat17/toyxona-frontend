@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, UserRole } from '@/types';
 import { loginRequest, registerRequest, fetchMeRequest, RegisterData } from '@/services/auth';
+import { api } from '@/services/api';
 import { useRouter } from 'next/navigation';
 
 interface AuthContextType {
@@ -34,12 +35,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     try {
+      api.defaults.headers.common.Authorization = `Bearer ${accessToken}`;
       const me = await fetchMeRequest();
       setUser(me);
     } catch (err) {
       // In case the token is expired/invalid, clear local tokens
       localStorage.removeItem('access_token');
       localStorage.removeItem('refresh_token');
+      delete api.defaults.headers.common.Authorization;
       setUser(null);
     } finally {
       setLoading(false);
@@ -58,6 +61,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.setItem('access_token', tokens.access);
         localStorage.setItem('refresh_token', tokens.refresh);
       }
+      api.defaults.headers.common.Authorization = `Bearer ${tokens.access}`;
       
       const me = await fetchMeRequest();
       setUser(me);
@@ -96,6 +100,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.removeItem('access_token');
       localStorage.removeItem('refresh_token');
     }
+    delete api.defaults.headers.common.Authorization;
     setUser(null);
     router.push('/login');
   };

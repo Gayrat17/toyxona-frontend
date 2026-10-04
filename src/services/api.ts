@@ -6,6 +6,13 @@ export const api = axios.create({
   baseURL: API_URL,
 });
 
+// Helper to check if current route requires authentication redirect
+const isProtectedRoute = () => {
+  if (typeof window === 'undefined') return false;
+  const pathname = window.location.pathname;
+  return pathname.startsWith('/admin') || pathname.startsWith('/dashboard');
+};
+
 // Helper to get access token from localStorage (safe for SSR)
 const getAccessToken = () => {
   if (typeof window !== 'undefined') {
@@ -61,8 +68,10 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // Check if error status is 401 Unauthorized and is not already a retry
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    const isAuthEndpoint = originalRequest.url?.includes('/auth/jwt/');
+
+    // Check if error status is 401 Unauthorized, not a retry, and not an auth endpoint
+    if (error.response?.status === 401 && !originalRequest._retry && !isAuthEndpoint) {
       
       // If already refreshing, add request to queue
       if (isRefreshing) {
@@ -81,12 +90,16 @@ api.interceptors.response.use(
 
       const refreshToken = getRefreshToken();
 
-      // If refresh token is missing, redirect user to login
+      // If refresh token is missing, clear invalid tokens and redirect only if on protected route
       if (!refreshToken) {
+        isRefreshing = false;
         if (typeof window !== 'undefined') {
           localStorage.removeItem('access_token');
           localStorage.removeItem('refresh_token');
-          window.location.href = '/login';
+          delete api.defaults.headers.common.Authorization;
+          if (isProtectedRoute()) {
+            window.location.href = '/login';
+          }
         }
         return Promise.reject(error);
       }
@@ -116,11 +129,14 @@ api.interceptors.response.use(
         processQueue(refreshError, null);
         isRefreshing = false;
 
-        // Clear local storage tokens and force redirect to login
+        // Clear local storage tokens and redirect only if on protected route
         if (typeof window !== 'undefined') {
           localStorage.removeItem('access_token');
           localStorage.removeItem('refresh_token');
-          window.location.href = '/login';
+          delete api.defaults.headers.common.Authorization;
+          if (isProtectedRoute()) {
+            window.location.href = '/login';
+          }
         }
         return Promise.reject(refreshError);
       }
