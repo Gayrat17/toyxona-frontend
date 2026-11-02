@@ -9,7 +9,7 @@ import { LayoutDashboard, Hotel, Plus, Clock, Calendar, LogOut, Crown } from 'lu
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
-    <ProtectedRoute allowedRoles={['VENUE_OWNER']}>
+    <ProtectedRoute allowedRoles={['VENUE_OWNER', 'CLIENT']}>
       <DashboardLayoutContent>{children}</DashboardLayoutContent>
     </ProtectedRoute>
   );

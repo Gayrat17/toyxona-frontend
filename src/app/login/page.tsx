@@ -67,9 +67,9 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen bg-paper">
+    <div className="flex h-screen overflow-hidden bg-paper">
       {/* ── Left visual panel (desktop only) ─────────────────────── */}
-      <div className="texture-grain relative hidden w-[44%] shrink-0 overflow-hidden lg:flex lg:flex-col">
+      <div className="texture-grain relative hidden w-[38%] shrink-0 overflow-hidden lg:flex lg:flex-col">
         <img
           src="/images/auth-side.jpg"
           alt=""
@@ -81,7 +81,7 @@ export default function LoginPage() {
           style={{ backgroundImage: STAR_LATTICE_PATTERN }}
         />
 
-        <div className="relative z-[2] flex h-full flex-col justify-between p-12">
+        <div className="relative z-[2] flex h-full flex-col justify-between p-8 xl:p-10">
           {/* Brand */}
           <Link href="/" className="flex items-center gap-3">
             <span className="relative flex h-10 w-10 rotate-45 items-center justify-center border border-gold/60 bg-gradient-to-br from-[#ecd49c] to-[#b08d4f] shadow-[0_8px_18px_-8px_rgba(150,110,50,0.7)]">
@@ -105,12 +105,12 @@ export default function LoginPage() {
               <span className="h-px w-10 bg-gradient-to-r from-transparent to-gold/80" />
               <span className="h-1.5 w-1.5 rotate-45 bg-gold" />
             </div>
-            <p className="mt-5 font-display text-[2.2rem] font-medium leading-snug text-[#f6efdd]">
+            <p className="mt-4 font-display text-[1.95rem] xl:text-[2.15rem] font-medium leading-snug text-[#f6efdd]">
               «Hashamat — bu
               <br />
               <span className="gold-text italic">an&apos;anadir»</span>
             </p>
-            <p className="mt-3 max-w-xs text-xs leading-relaxed text-[#cbbc9c]">
+            <p className="mt-2.5 max-w-xs text-xs leading-relaxed text-[#cbbc9c]">
               Minglab juftliklar eng unutilmas kunlarini bizning
               platformamizda boshlaydi. Sizga ham xush kelibsiz.
             </p>
@@ -124,33 +124,33 @@ export default function LoginPage() {
 
       {/* ── Right: form panel ─────────────────────────────────────── */}
       <div className="pattern-weave flex flex-1 flex-col overflow-y-auto">
-        <div className="flex flex-1 flex-col items-center justify-center px-4 py-10 sm:px-8">
-          <div className="w-full max-w-[440px]">
+        <div className="flex min-h-full flex-col items-center justify-center p-4 sm:p-6 lg:p-8">
+          <div className="w-full max-w-[620px] lg:max-w-[640px]">
             {/* Back link */}
             <Link
               href="/"
-              className="group mb-5 inline-flex items-center gap-2 text-xs font-semibold text-ink-faint transition-colors hover:text-gold-strong"
+              className="group mb-4 inline-flex items-center gap-2 text-xs font-semibold text-ink-faint transition-colors hover:text-gold-strong"
             >
-              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-surface-2 border border-line text-ink-soft transition-transform group-hover:-translate-x-0.5">
-                <ArrowLeft className="h-3.5 w-3.5" />
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-surface-2 border border-line text-ink-soft transition-transform group-hover:-translate-x-0.5">
+                <ArrowLeft className="h-3 w-3" />
               </span>
               <span>Bosh sahifaga qaytish</span>
             </Link>
 
             {/* Form card */}
             <motion.div
-              className="card-lux p-6 sm:p-8"
-              initial={{ opacity: 0, y: 16 }}
+              className="card-lux p-5 sm:p-7"
+              initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
             >
               {/* Header */}
-              <div className="flex items-center gap-3.5">
-                <span className="flex h-11 w-11 shrink-0 rotate-45 items-center justify-center border border-gold/60 bg-gold-tint shadow-[0_4px_12px_-4px_rgba(176,141,79,0.35)]">
+              <div className="flex items-center gap-3">
+                <span className="flex h-10 w-10 shrink-0 rotate-45 items-center justify-center border border-gold/60 bg-gold-tint shadow-[0_4px_12px_-4px_rgba(176,141,79,0.35)]">
                   <Crown className="h-4 w-4 -rotate-45 text-gold-strong" />
                 </span>
                 <div>
-                  <h1 className="font-display text-2xl font-bold tracking-tight text-ink">
+                  <h1 className="font-display text-xl sm:text-[22px] font-bold tracking-tight text-ink">
                     Xush kelibsiz
                   </h1>
                   <p className="mt-0.5 text-xs font-medium text-ink-soft">
@@ -160,18 +160,18 @@ export default function LoginPage() {
               </div>
 
               {/* Divider */}
-              <div className="mt-5 flex items-center gap-3">
+              <div className="my-3.5 flex items-center gap-3">
                 <span className="h-px flex-1 bg-gradient-to-r from-transparent via-gold/40 to-gold/60" />
-                <span className="h-1.5 w-1.5 rotate-45 bg-gold/70 shadow-[0_0_8px_rgba(176,141,79,0.4)]" />
+                <span className="h-1 w-1 rotate-45 bg-gold/70" />
                 <span className="h-px flex-1 bg-gradient-to-l from-transparent via-gold/40 to-gold/60" />
               </div>
 
               {/* Method Selector Tabs */}
-              <div className="mt-6 grid grid-cols-2 gap-1.5 rounded-2xl bg-surface-2 p-1.5 border border-line">
+              <div className="grid grid-cols-2 gap-1.5 rounded-2xl bg-surface-2 p-1.5 border border-line">
                 <button
                   type="button"
                   onClick={() => { setAuthMethod('telegram'); setError(null); }}
-                  className={`relative flex items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-bold transition-all ${
+                  className={`relative flex items-center justify-center gap-2 rounded-xl py-2 text-xs font-bold transition-all ${
                     authMethod === 'telegram'
                       ? 'bg-surface text-ink shadow-sm border border-line-strong'
                       : 'text-ink-soft hover:text-ink hover:bg-surface/50'
@@ -187,7 +187,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => { setAuthMethod('password'); setError(null); }}
-                  className={`flex items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-bold transition-all ${
+                  className={`flex items-center justify-center gap-2 rounded-xl py-2 text-xs font-bold transition-all ${
                     authMethod === 'password'
                       ? 'bg-surface text-ink shadow-sm border border-line-strong'
                       : 'text-ink-soft hover:text-ink hover:bg-surface/50'
@@ -199,7 +199,7 @@ export default function LoginPage() {
               </div>
 
               {authMethod === 'telegram' ? (
-                <div className="mt-6">
+                <div className="mt-4">
                   <TelegramAuthWidget />
                 </div>
               ) : (
@@ -208,7 +208,7 @@ export default function LoginPage() {
                   <AnimatePresence>
                     {error && (
                       <motion.div
-                        className="mt-4 flex items-center gap-2.5 rounded-xl border border-danger/30 bg-danger/10 px-3.5 py-3 text-xs font-semibold text-danger"
+                        className="mt-3.5 flex items-center gap-2.5 rounded-xl border border-danger/30 bg-danger/10 px-3.5 py-2.5 text-xs font-semibold text-danger"
                         initial={{ opacity: 0, y: -6 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0 }}
@@ -221,10 +221,10 @@ export default function LoginPage() {
                   </AnimatePresence>
 
                   {/* Form */}
-                  <form className="mt-5 space-y-4" onSubmit={handleSubmit}>
+                  <form className="mt-4 space-y-3.5" onSubmit={handleSubmit}>
                     {/* Phone */}
                     <div>
-                      <label htmlFor="phone-number" className="field-label mb-1.5">
+                      <label htmlFor="phone-number" className="field-label mb-1">
                         Telefon raqam
                       </label>
                       <div className="relative flex items-center">
@@ -242,14 +242,14 @@ export default function LoginPage() {
                           onFocus={phone.handleFocus}
                           onClick={phone.handleClick}
                           aria-label="Telefon raqam"
-                          className="input-lux has-icon-left h-11 !pl-11 !pr-4 !py-0 font-medium"
+                          className="input-lux has-icon-left h-10 !pl-11 !pr-4 !py-0 font-medium text-xs"
                         />
                       </div>
                     </div>
 
                     {/* Password */}
                     <div>
-                      <label htmlFor="password" className="field-label mb-1.5">
+                      <label htmlFor="password" className="field-label mb-1">
                         Parol
                       </label>
                       <div className="relative flex items-center">
@@ -263,7 +263,7 @@ export default function LoginPage() {
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
                           aria-label="Parol"
-                          className="input-lux has-icon-left has-icon-right h-11 !pl-11 !pr-11 !py-0"
+                          className="input-lux has-icon-left has-icon-right h-10 !pl-11 !pr-11 !py-0 text-xs"
                         />
                         <button
                           type="button"
@@ -280,7 +280,7 @@ export default function LoginPage() {
                     <button
                       type="submit"
                       disabled={loading}
-                      className="btn-gold mt-2 w-full !py-3 !text-xs flex items-center justify-center gap-2 font-bold tracking-wide"
+                      className="btn-gold mt-1.5 w-full !py-2.5 !text-xs flex items-center justify-center gap-2 font-bold tracking-wide"
                     >
                       {loading ? (
                         <span className="h-4 w-4 animate-spin rounded-full border-2 border-[#251b0c] border-t-transparent" />
@@ -296,7 +296,7 @@ export default function LoginPage() {
               )}
 
               {/* Switch link */}
-              <div className="mt-6 border-t border-line/60 pt-4 text-center text-xs font-medium text-ink-soft">
+              <div className="mt-4 border-t border-line/60 pt-3.5 text-center text-xs font-medium text-ink-soft">
                 Hisobingiz yo&apos;qmi?{' '}
                 <Link
                   href="/register"

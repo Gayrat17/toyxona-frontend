@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -11,9 +11,6 @@ import {
   Clock,
   ArrowRight,
   ShieldCheck,
-  Building2,
-  UserCheck,
-  Sparkles,
 } from 'lucide-react';
 import {
   initTelegramAuthRequest,
@@ -21,76 +18,75 @@ import {
   TelegramAuthInitResponse,
 } from '@/services/auth';
 import { useAuth } from '@/store/auth-context';
-import { UserRole } from '@/types';
 import { useRouter } from 'next/navigation';
 
 interface TelegramAuthWidgetProps {
   onSuccess?: () => void;
-  defaultRole?: UserRole;
 }
 
 export const TelegramAuthWidget: React.FC<TelegramAuthWidgetProps> = ({
   onSuccess,
-  defaultRole = 'CLIENT',
 }) => {
-  const { setAuthenticatedSession, updateUserRole } = useAuth();
+  const { setAuthenticatedSession } = useAuth();
   const router = useRouter();
 
   const [loading, setLoading] = useState(true);
   const [initData, setInitData] = useState<TelegramAuthInitResponse | null>(null);
   const [status, setStatus] = useState<
-    'PENDING' | 'AUTHENTICATED' | 'COMPLETED' | 'EXPIRED' | 'ERROR'
+    'PENDING' | 'AUTHENTICATED' | 'COMPLETED' | 'ERROR'
   >('PENDING');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [timeLeft, setTimeLeft] = useState<number>(600);
-
-  // New user onboarding state
-  const [isNewUser, setIsNewUser] = useState(false);
-  const [selectedRole, setSelectedRole] = useState<UserRole>(defaultRole);
-  const [customName, setCustomName] = useState('');
-  const [savingProfile, setSavingProfile] = useState(false);
+  const [timeLeft, setTimeLeft] = useState<number>(180);
 
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const isRefreshingRef = useRef(false);
 
-  // 1. Initialize Telegram Auth Session
-  const startSession = async () => {
-    setLoading(true);
-    setStatus('PENDING');
+  // 1. Initialize Telegram Auth Session (auto-refreshes seamlessly)
+  const startSession = useCallback(async (isAutoRefresh = false) => {
+    if (isRefreshingRef.current) return;
+    isRefreshingRef.current = true;
+
+    if (!isAutoRefresh) {
+      setLoading(true);
+    }
     setErrorMsg(null);
-    setIsNewUser(false);
 
     try {
       const data = await initTelegramAuthRequest();
       setInitData(data);
-      setTimeLeft(data.expires_in_seconds || 600);
-      setLoading(false);
+      setTimeLeft(data.expires_in_seconds || 180);
+      setStatus('PENDING');
     } catch (err: unknown) {
+      if (!isAutoRefresh) {
+        setStatus('ERROR');
+        setErrorMsg("Telegram bilan bog'lanishda xatolik yuz berdi. Iltimos qaytadan urining.");
+      }
+    } finally {
       setLoading(false);
-      setStatus('ERROR');
-      setErrorMsg("Telegram bilan bog'lanishda xatolik yuz berdi. Iltimos qaytadan urining.");
+      isRefreshingRef.current = false;
     }
-  };
+  }, []);
 
   useEffect(() => {
-    startSession();
+    startSession(false);
 
     return () => {
       if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
       if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
     };
-  }, []);
+  }, [startSession]);
 
-  // 2. Countdown timer
+  // 2. Countdown timer with seamless auto-renewal (3 daqiqa)
   useEffect(() => {
-    if (status !== 'PENDING' || loading || !initData) return;
+    if (status !== 'PENDING' || loading || !initData?.session_id) return;
 
     timerIntervalRef.current = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
-          if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
-          setStatus('EXPIRED');
-          return 0;
+          // Muddati tugaganda to'xtovsiz avtomatik yangi sessiya olinadi
+          startSession(true);
+          return 180;
         }
         return prev - 1;
       });
@@ -99,15 +95,16 @@ export const TelegramAuthWidget: React.FC<TelegramAuthWidgetProps> = ({
     return () => {
       if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
     };
-  }, [status, loading, initData]);
+  }, [status, loading, initData?.session_id, startSession]);
 
   // 3. Polling check status
   useEffect(() => {
     if (status !== 'PENDING' || loading || !initData?.session_id) return;
+    const currentSessionId = initData.session_id;
 
     pollIntervalRef.current = setInterval(async () => {
       try {
-        const res = await checkTelegramAuthStatusRequest(initData.session_id);
+        const res = await checkTelegramAuthStatusRequest(currentSessionId);
 
         if (res.status === 'AUTHENTICATED' && res.access && res.refresh && res.user) {
           if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
@@ -115,28 +112,29 @@ export const TelegramAuthWidget: React.FC<TelegramAuthWidgetProps> = ({
 
           // Authenticate user in frontend state
           setAuthenticatedSession(res.access, res.refresh, res.user);
-          setCustomName(res.user.first_name || '');
+          setStatus('COMPLETED');
 
-          if (res.is_new_user) {
-            setIsNewUser(true);
-            setStatus('AUTHENTICATED');
-          } else {
-            setStatus('COMPLETED');
+          const params = new URLSearchParams(window.location.search);
+          const redirectPath = params.get('redirect');
+
+          setTimeout(() => {
             if (onSuccess) {
               onSuccess();
+            } else if (redirectPath) {
+              router.replace(redirectPath);
             } else {
-              if (res.user.role === 'ADMIN') {
+              if (res.user?.role === 'ADMIN') {
                 router.replace('/admin/dashboard');
-              } else if (res.user.role === 'VENUE_OWNER') {
-                router.replace('/dashboard');
+              } else if (res.user?.role === 'VENUE_OWNER') {
+                router.replace('/dashboard/venues');
               } else {
                 router.replace('/');
               }
             }
-          }
+          }, 800);
         } else if (res.status === 'EXPIRED') {
-          if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
-          setStatus('EXPIRED');
+          // Server tomondan expired bo'lsa yangitdan boshlanadi
+          startSession(true);
         }
       } catch (err) {
         // Continue polling silently unless hard error
@@ -146,40 +144,13 @@ export const TelegramAuthWidget: React.FC<TelegramAuthWidgetProps> = ({
     return () => {
       if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
     };
-  }, [status, loading, initData, setAuthenticatedSession, onSuccess, router]);
-
-  // Complete profile for new user
-  const handleCompleteProfile = async () => {
-    setSavingProfile(true);
-    try {
-      const updatedUser = await updateUserRole(selectedRole, customName.trim());
-      setStatus('COMPLETED');
-      if (onSuccess) {
-        onSuccess();
-      } else {
-        if (updatedUser.role === 'ADMIN') {
-          router.replace('/admin/dashboard');
-        } else if (updatedUser.role === 'VENUE_OWNER') {
-          router.replace('/dashboard');
-        } else {
-          router.replace('/');
-        }
-      }
-    } catch (err) {
-      // Fallback redirect
-      if (selectedRole === 'VENUE_OWNER') {
-        router.replace('/dashboard');
-      } else {
-        router.replace('/');
-      }
-    } finally {
-      setSavingProfile(false);
-    }
-  };
+  }, [status, loading, initData?.session_id, setAuthenticatedSession, onSuccess, router, startSession]);
 
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;
-  const formattedTime = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+  const formattedMinutes = String(minutes).padStart(2, '0');
+  const formattedSeconds = String(seconds).padStart(2, '0');
+  const formattedTime = `${formattedMinutes}:${formattedSeconds}`;
 
   return (
     <div className="w-full">
@@ -203,10 +174,10 @@ export const TelegramAuthWidget: React.FC<TelegramAuthWidgetProps> = ({
           </motion.div>
         )}
 
-        {/* Error or Expired State */}
-        {(status === 'ERROR' || status === 'EXPIRED') && (
+        {/* Error State only */}
+        {status === 'ERROR' && (
           <motion.div
-            key="expired"
+            key="error"
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
@@ -216,20 +187,18 @@ export const TelegramAuthWidget: React.FC<TelegramAuthWidgetProps> = ({
               <AlertCircle className="h-7 w-7" />
             </div>
             <h4 className="mb-1 text-base font-bold text-ink">
-              {status === 'EXPIRED'
-                ? "Sessiya muddati tugadi"
-                : "Xatolik yuz berdi"}
+              Xatolik yuz berdi
             </h4>
             <p className="mb-5 max-w-xs text-xs leading-relaxed text-ink-soft">
               {errorMsg ||
-                "Xavfsizlik yuzasidan ushbu kirish sessiyasi muddati yakunlandi. Yangi QR-kod olish uchun tugmani bosing."}
+                "Bog'lanishda xatolik yuz berdi. Iltimos, internetingizni tekshirib qaytadan urining."}
             </p>
             <button
-              onClick={startSession}
+              onClick={() => startSession(false)}
               className="btn-gold inline-flex items-center gap-2 px-5 py-2.5 text-xs font-bold"
             >
               <RefreshCw className="h-3.5 w-3.5" />
-              <span>Qaytadan boshlash</span>
+              <span>Qaytadan urinish</span>
             </button>
           </motion.div>
         )}
@@ -241,198 +210,111 @@ export const TelegramAuthWidget: React.FC<TelegramAuthWidgetProps> = ({
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="flex flex-col items-center"
+            className="w-full"
           >
-            {/* QR Code Container */}
-            <div className="relative mb-5 flex flex-col items-center rounded-2xl border border-line-strong bg-white p-5 shadow-sm dark:border-gold/25 dark:shadow-[0_8px_30px_rgba(0,0,0,0.45)]">
-              <div className="relative rounded-xl bg-white p-1">
-                <QRCodeSVG
-                  value={initData.bot_url}
-                  size={196}
-                  level="H"
-                  includeMargin={false}
-                  imageSettings={{
-                    src: 'https://telegram.org/img/t_logo.png',
-                    x: undefined,
-                    y: undefined,
-                    height: 40,
-                    width: 40,
-                    excavate: true,
-                  }}
-                />
-              </div>
-
-              {/* Countdown badge (Warm ivory with dark text for reliable contrast inside white box) */}
-              <div className="mt-3.5 flex items-center gap-1.5 rounded-full bg-[#f5ede2] border border-[#e2d5be] px-3.5 py-1 text-[11px] font-semibold text-[#5c4f39]">
-                <Clock className="h-3.5 w-3.5 text-[#b08d4f]" />
-                <span>Muddati:</span>
-                <span className="font-mono font-bold text-[#241c10]">{formattedTime}</span>
-              </div>
-              <p className="mt-1.5 text-[10px] font-medium text-[#8d7f63]">
-                Kamerani QR-kodga qarating
-              </p>
-            </div>
-
-            {/* Direct Open Button for Mobile / Desktop Telegram */}
-            <a
-              href={initData.bot_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group mb-4 flex w-full items-center justify-center gap-2.5 rounded-xl bg-gradient-to-r from-[#24A1DE] to-[#1c8bc5] px-5 py-3 text-sm font-bold text-white shadow-[0_8px_20px_-6px_rgba(36,161,222,0.45)] transition hover:from-[#1f93cb] hover:to-[#177db0] hover:shadow-[0_12px_24px_-6px_rgba(36,161,222,0.6)] active:scale-[0.99]"
-            >
-              <Send className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-              <span>Telegram orqali tasdiqlash</span>
-              <ArrowRight className="h-4 w-4 opacity-75 transition-transform group-hover:translate-x-1 group-hover:opacity-100" />
-            </a>
-
-            {/* Live Indicator Chip */}
-            <div className="mb-5 flex items-center justify-center gap-2 rounded-full border border-line bg-surface-2/80 px-4 py-1.5 text-xs font-semibold text-ink-soft">
-              <span className="relative flex h-2.5 w-2.5">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#24A1DE] opacity-75" />
-                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-[#24A1DE]" />
-              </span>
-              <span>Botda tasdiqlash kutilmoqda...</span>
-            </div>
-
-            {/* Step-by-step Guide */}
-            <div className="w-full rounded-2xl border border-line bg-surface-2/60 p-4 text-left">
-              <div className="mb-3 flex items-center gap-2 text-xs font-bold text-ink">
-                <div className="flex h-5 w-5 items-center justify-center rounded-full bg-gold/15 text-gold-strong">
-                  <ShieldCheck className="h-3.5 w-3.5" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 items-stretch w-full">
+              {/* Left Column: QR Code Container */}
+              <div className="relative flex flex-col items-center justify-center rounded-2xl border border-line-strong bg-white p-3.5 sm:p-4 shadow-sm dark:border-gold/25 dark:shadow-[0_8px_30px_rgba(0,0,0,0.45)]">
+                <div className="relative rounded-xl bg-white p-1">
+                  <QRCodeSVG
+                    value={initData.bot_url}
+                    size={156}
+                    level="H"
+                    includeMargin={false}
+                    imageSettings={{
+                      src: 'https://telegram.org/img/t_logo.png',
+                      x: undefined,
+                      y: undefined,
+                      height: 34,
+                      width: 34,
+                      excavate: true,
+                    }}
+                  />
                 </div>
-                <span>Qanday amalga oshiriladi?</span>
-              </div>
-              <ol className="space-y-2.5 text-xs text-ink-soft">
-                <li className="flex items-start gap-2.5">
-                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-surface border border-line text-[10px] font-bold text-gold-strong">
-                    1
-                  </span>
-                  <span className="pt-0.5 leading-relaxed">
-                    Yuqoridagi <strong className="font-bold text-ink">QR-kodni skanerlang</strong> yoki ko&apos;k tugmani bosing.
-                  </span>
-                </li>
-                <li className="flex items-start gap-2.5">
-                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-surface border border-line text-[10px] font-bold text-gold-strong">
-                    2
-                  </span>
-                  <span className="pt-0.5 leading-relaxed">
-                    Bot ochilgach, <strong className="font-bold text-ink">Start</strong> tugmasini bosing.
-                  </span>
-                </li>
-                <li className="flex items-start gap-2.5">
-                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-surface border border-line text-[10px] font-bold text-gold-strong">
-                    3
-                  </span>
-                  <span className="pt-0.5 leading-relaxed">
-                    <strong className="font-bold text-ink">📱 Telefon raqamni yuborish</strong> tugmasi orqali hisobingizni tasdiqlang.
-                  </span>
-                </li>
-              </ol>
-            </div>
-          </motion.div>
-        )}
 
-        {/* Authenticated - New User Role Selection */}
-        {status === 'AUTHENTICATED' && isNewUser && (
-          <motion.div
-            key="onboarding"
-            initial={{ opacity: 0, scale: 0.96 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0 }}
-            className="flex flex-col text-left"
-          >
-            <div className="mb-4 flex items-center gap-3 text-emerald-600 dark:text-emerald-400">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/10 border border-emerald-500/20">
-                <CheckCircle2 className="h-5 w-5" />
-              </div>
-              <div>
-                <h4 className="text-sm font-bold text-ink">Telefon raqam tasdiqlandi!</h4>
-                <p className="text-[11px] font-medium text-ink-soft">
-                  Hisobingizni yakunlash uchun ma&apos;lumotlarni kiriting
+                {/* Countdown badge */}
+                <div className="mt-2.5 flex items-center gap-1.5 rounded-full bg-[#f5ede2] border border-[#e2d5be] px-3 py-1 text-[11px] font-semibold text-[#5c4f39]">
+                  <Clock className="h-3 w-3 text-[#b08d4f]" />
+                  <span>Muddati:</span>
+                  <span className="font-mono font-bold text-[#241c10]">{formattedTime}</span>
+                  <span className="text-[10px] text-[#8d7f63]">daqiqa</span>
+                  <button
+                    type="button"
+                    onClick={() => startSession(false)}
+                    title="QR-kodni yangilash"
+                    className="ml-1 rounded p-0.5 text-[#b08d4f] hover:text-[#5c4f39] transition-colors"
+                  >
+                    <RefreshCw className="h-3 w-3" />
+                  </button>
+                </div>
+                <p className="mt-1 text-[10px] font-medium text-[#8d7f63]">
+                  Kamerani QR-kodga qarating
                 </p>
               </div>
-            </div>
 
-            {/* Name Input */}
-            <div className="mb-4">
-              <label htmlFor="user-custom-name" className="field-label mb-1.5">
-                Ismingiz
-              </label>
-              <input
-                id="user-custom-name"
-                type="text"
-                value={customName}
-                onChange={(e) => setCustomName(e.target.value)}
-                placeholder="Ismingizni kiriting"
-                className="input-lux h-11"
-              />
-            </div>
-
-            {/* Role Selection */}
-            <div className="mb-5">
-              <label className="field-label mb-2">
-                Sizning maqsadingiz (Rolingiz)
-              </label>
-              <div className="grid grid-cols-2 gap-2.5">
-                <button
-                  type="button"
-                  onClick={() => setSelectedRole('CLIENT')}
-                  className={`flex flex-col items-start rounded-xl border p-3.5 text-left transition ${
-                    selectedRole === 'CLIENT'
-                      ? 'border-gold bg-gold/10 text-ink shadow-sm ring-1 ring-gold'
-                      : 'border-line bg-surface text-ink-soft hover:border-line-strong hover:text-ink'
-                  }`}
-                >
-                  <UserCheck
-                    className={`mb-2 h-4 w-4 ${
-                      selectedRole === 'CLIENT' ? 'text-gold' : 'text-ink-faint'
-                    }`}
-                  />
-                  <span className="text-xs font-bold text-ink">Mijoz</span>
-                  <span className="mt-0.5 text-[10px] leading-snug text-ink-soft">
-                    To&apos;yxona va joylarni bron qilish
+              {/* Right Column: Live indicator, Guide, & Direct Open Button */}
+              <div className="flex flex-col justify-between h-full space-y-2.5 sm:space-y-0">
+                {/* Live Indicator Chip */}
+                <div className="flex items-center justify-between rounded-xl border border-line bg-surface-2/80 px-3.5 py-2 text-xs font-semibold text-ink-soft">
+                  <span className="flex items-center gap-2">
+                    <span className="relative flex h-2 w-2">
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#24A1DE] opacity-75" />
+                      <span className="relative inline-flex h-2 w-2 rounded-full bg-[#24A1DE]" />
+                    </span>
+                    <span className="text-[11px]">Botda tasdiqlash kutilmoqda</span>
                   </span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setSelectedRole('VENUE_OWNER')}
-                  className={`flex flex-col items-start rounded-xl border p-3.5 text-left transition ${
-                    selectedRole === 'VENUE_OWNER'
-                      ? 'border-gold bg-gold/10 text-ink shadow-sm ring-1 ring-gold'
-                      : 'border-line bg-surface text-ink-soft hover:border-line-strong hover:text-ink'
-                  }`}
-                >
-                  <Building2
-                    className={`mb-2 h-4 w-4 ${
-                      selectedRole === 'VENUE_OWNER' ? 'text-gold' : 'text-ink-faint'
-                    }`}
-                  />
-                  <span className="text-xs font-bold text-ink">Muassasa egasi</span>
-                  <span className="mt-0.5 text-[10px] leading-snug text-ink-soft">
-                    To&apos;yxona yoki barni boshqarish
+                  <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[9px] font-extrabold text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                    Jonli
                   </span>
-                </button>
+                </div>
+
+                {/* Step-by-step Guide */}
+                <div className="rounded-xl border border-line bg-surface-2/60 p-3 text-left">
+                  <div className="mb-2 flex items-center gap-1.5 text-[11px] font-bold text-ink">
+                    <ShieldCheck className="h-3.5 w-3.5 text-gold-strong" />
+                    <span>Tezkor yo&apos;riqnoma:</span>
+                  </div>
+                  <ol className="space-y-1.5 text-[11px] text-ink-soft">
+                    <li className="flex items-start gap-2">
+                      <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-surface border border-line text-[9px] font-bold text-gold-strong">
+                        1
+                      </span>
+                      <span className="pt-0.5 leading-snug">
+                        QR-kodni skanerlang yoki pastdagi tugmani bosing
+                      </span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-surface border border-line text-[9px] font-bold text-gold-strong">
+                        2
+                      </span>
+                      <span className="pt-0.5 leading-snug">
+                        Botda <strong className="font-bold text-ink">Start</strong> tugmasini bosing
+                      </span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-surface border border-line text-[9px] font-bold text-gold-strong">
+                        3
+                      </span>
+                      <span className="pt-0.5 leading-snug">
+                        <strong className="font-bold text-ink">📱 Telefon raqamni yuborish</strong> orqali kiring
+                      </span>
+                    </li>
+                  </ol>
+                </div>
+
+                {/* Direct Open Button for Mobile / Desktop Telegram */}
+                <a
+                  href={initData.bot_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#24A1DE] to-[#1c8bc5] px-4 py-2.5 text-xs font-bold text-white shadow-[0_6px_16px_-4px_rgba(36,161,222,0.45)] transition hover:from-[#1f93cb] hover:to-[#177db0] hover:shadow-[0_10px_20px_-4px_rgba(36,161,222,0.6)] active:scale-[0.99]"
+                >
+                  <Send className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+                  <span>Telegram ilovasida ochish</span>
+                  <ArrowRight className="h-3.5 w-3.5 opacity-75 transition-transform group-hover:translate-x-1 group-hover:opacity-100" />
+                </a>
               </div>
             </div>
-
-            <button
-              onClick={handleCompleteProfile}
-              disabled={savingProfile}
-              className="btn-gold flex w-full items-center justify-center gap-2 py-3 text-xs font-bold disabled:opacity-50"
-            >
-              {savingProfile ? (
-                <>
-                  <RefreshCw className="h-3.5 w-3.5 animate-spin" />
-                  <span>Saqlanmoqda...</span>
-                </>
-              ) : (
-                <>
-                  <Sparkles className="h-3.5 w-3.5" />
-                  <span>Tizimga kirish</span>
-                </>
-              )}
-            </button>
           </motion.div>
         )}
 

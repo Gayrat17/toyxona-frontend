@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/store/auth-context';
-import { LogOut, LogIn, Sun, Moon, Crown } from 'lucide-react';
+import { LogOut, LogIn, Sun, Moon, Crown, Building2, Plus } from 'lucide-react';
 
 interface HeaderProps {
   onLogoClick?: () => void;
@@ -80,6 +80,26 @@ export function Header({ onLogoClick }: HeaderProps = {}) {
 
         {/* Actions */}
         <div className="flex items-center gap-2.5">
+          {/* "Add Venue" Call-to-action (Booking.com style) */}
+          {user?.role === 'VENUE_OWNER' ? (
+            <Link
+              href="/dashboard/add"
+              className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-gold/50 bg-gold/10 px-3.5 py-2 text-[12px] font-bold text-gold-strong transition-all hover:bg-gold hover:text-espresso"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              <span>Yangi joy qo&apos;shish</span>
+            </Link>
+          ) : (
+            <Link
+              href={user ? '/dashboard/add' : '/login?redirect=/dashboard/add'}
+              className="hidden sm:inline-flex items-center gap-2 rounded-full border border-gold/60 bg-gold/10 px-4 py-2 text-[12px] font-bold text-gold-strong transition-all hover:bg-gold hover:text-espresso shadow-xs"
+              title="To'yxonangizni platformaga qo'shing va yangi mijozlarga ega bo'ling"
+            >
+              <Building2 className="h-4 w-4" />
+              <span>To&apos;yxonangizni qo&apos;shing</span>
+            </Link>
+          )}
+
           <button
             type="button"
             onClick={toggleTheme}

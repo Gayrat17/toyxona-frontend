@@ -8,6 +8,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createHallRequest, createBarRequest, fetchRegionsRequest } from '@/services/venues';
 import { Region } from '@/types';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/store/auth-context';
 import {
   Hotel, Wine, DollarSign, Image as ImageIcon, Video, Check,
   AlertCircle, UploadCloud, X, Sparkles, Shield, Wifi, Car, AirVent, Music, Baby, Accessibility, Plus,
@@ -84,6 +85,7 @@ function FormSection({
 export default function AddVenuePage() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { refreshUser } = useAuth();
 
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -203,6 +205,7 @@ export default function AddVenuePage() {
       }
 
       setSuccess(true);
+      await refreshUser();
       setTimeout(() => {
         router.push('/dashboard/venues');
       }, 1500);
