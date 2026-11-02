@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, UserRole } from '@/types';
-import { loginRequest, registerRequest, fetchMeRequest, RegisterData } from '@/services/auth';
+import { loginRequest, registerRequest, fetchMeRequest, completeProfileRequest, RegisterData } from '@/services/auth';
 import { api } from '@/services/api';
 import { useRouter } from 'next/navigation';
 
@@ -12,6 +12,9 @@ interface AuthContextType {
   login: (phone_number: string, password: string) => Promise<void>;
   register: (phone_number: string, first_name: string, password: string, role: UserRole) => Promise<void>;
   logout: () => void;
+  setAuthenticatedSession: (access: string, refresh: string, user: User) => void;
+  updateUserRole: (role: UserRole, first_name?: string) => Promise<User>;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -105,8 +108,43 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     router.push('/login');
   };
 
+  const setAuthenticatedSession = (access: string, refresh: string, userData: User) => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('access_token', access);
+      localStorage.setItem('refresh_token', refresh);
+    }
+    api.defaults.headers.common.Authorization = `Bearer ${access}`;
+    setUser(userData);
+  };
+
+  const updateUserRole = async (role: UserRole, first_name?: string): Promise<User> => {
+    const res = await completeProfileRequest(role, first_name);
+    setUser(res.user);
+    return res.user;
+  };
+
+  const refreshUser = async () => {
+    try {
+      const me = await fetchMeRequest();
+      setUser(me);
+    } catch {
+      // ignore
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        login,
+        register,
+        logout,
+        setAuthenticatedSession,
+        updateUserRole,
+        refreshUser,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

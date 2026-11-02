@@ -59,3 +59,55 @@ export const fetchMeRequest = async (): Promise<User> => {
   const response = await api.get('/auth/users/me/');
   return response.data;
 };
+
+export interface TelegramAuthInitResponse {
+  session_id: string;
+  bot_username: string;
+  bot_url: string;
+  expires_at: string;
+  expires_in_seconds: number;
+}
+
+export interface TelegramAuthStatusResponse {
+  status: 'PENDING' | 'AUTHENTICATED' | 'COMPLETED' | 'EXPIRED' | 'NOT_FOUND';
+  access?: string;
+  refresh?: string;
+  is_new_user?: boolean;
+  user?: User;
+  detail?: string;
+}
+
+/**
+ * Initializes a new Telegram QR / deep-link authentication session.
+ */
+export const initTelegramAuthRequest = async (): Promise<TelegramAuthInitResponse> => {
+  const response = await api.post('/auth/telegram/init/');
+  return response.data;
+};
+
+/**
+ * Polls the status of an ongoing Telegram authentication session.
+ */
+export const checkTelegramAuthStatusRequest = async (
+  sessionId: string
+): Promise<TelegramAuthStatusResponse> => {
+  const response = await api.get(`/auth/telegram/status/${sessionId}/`);
+  return response.data;
+};
+
+/**
+ * Sets role and name for newly registered Telegram users.
+ */
+export const completeProfileRequest = async (
+  role: UserRole,
+  firstName?: string,
+  lastName?: string
+): Promise<{ message: string; user: User }> => {
+  const response = await api.post('/auth/complete-profile/', {
+    role,
+    first_name: firstName,
+    last_name: lastName,
+  });
+  return response.data;
+};
+

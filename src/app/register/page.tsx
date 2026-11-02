@@ -6,10 +6,11 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Phone, Lock, Eye, EyeOff, User as UserIcon, Shield,
-  AlertCircle, Crown, ArrowLeft, UserPlus,
+  AlertCircle, Crown, ArrowLeft, UserPlus, Send, Sparkles,
 } from 'lucide-react';
 import { useUzbekPhoneInput } from '@/hooks/useUzbekPhoneInput';
 import { STAR_LATTICE_PATTERN } from '@/constants/decoration';
+import { TelegramAuthWidget } from '@/components/auth/TelegramAuthWidget';
 
 import { useRouter } from 'next/navigation';
 
@@ -17,6 +18,7 @@ export default function RegisterPage() {
   const { register, loading, user } = useAuth();
   const router = useRouter();
   const phone = useUzbekPhoneInput();
+  const [authMethod, setAuthMethod] = useState<'telegram' | 'password'>('telegram');
   const [firstName, setFirstName] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -216,137 +218,177 @@ export default function RegisterPage() {
                 <span className="h-px flex-1 bg-gradient-to-l from-transparent to-gold/50" />
               </div>
 
-              {/* Error */}
-              <AnimatePresence>
-                {error && (
-                  <motion.div
-                    className="mt-4 flex items-center gap-2 rounded-xl border border-danger/30 bg-danger/5 px-3 py-2.5 text-[12px] font-semibold text-danger"
-                    initial={{ opacity: 0, y: -6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <AlertCircle className="h-4 w-4 shrink-0" />
-                    <span>{error}</span>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* Form */}
-              <form className="mt-5 space-y-4" onSubmit={handleSubmit}>
-                {/* Name */}
-                <div>
-                  <label htmlFor="first-name" className="field-label">Ism</label>
-                  <div className="relative mt-1.5 flex items-center">
-                    <UserIcon className="pointer-events-none absolute left-3.5 h-4 w-4 text-gold" />
-                    <input
-                      id="first-name"
-                      name="firstName"
-                      type="text"
-                      required
-                      placeholder="Ismingiz"
-                      value={firstName}
-                      onChange={handleNameChange}
-                      onKeyDown={handleNameKeyDown}
-                      aria-label="Ism"
-                      className="input-lux has-icon-left h-11 !pl-11 !pr-4 !py-0"
-                    />
-                  </div>
-                </div>
-
-                {/* Phone */}
-                <div>
-                  <label htmlFor="phone-number" className="field-label">Telefon raqam</label>
-                  <div className="relative mt-1.5 flex items-center">
-                    <Phone className="pointer-events-none absolute left-3.5 h-4 w-4 text-gold" />
-                    <input
-                      id="phone-number"
-                      name="phoneNumber"
-                      type="tel"
-                      inputMode="numeric"
-                      required
-                      placeholder="+998 90 123 45 67"
-                      value={phone.value}
-                      onChange={phone.handleChange}
-                      onKeyDown={phone.handleKeyDown}
-                      onFocus={phone.handleFocus}
-                      onClick={phone.handleClick}
-                      aria-label="Telefon raqam"
-                      className="input-lux has-icon-left h-11 !pl-11 !pr-4 !py-0 font-medium"
-                    />
-                  </div>
-                </div>
-
-                {/* Password */}
-                <div>
-                  <label htmlFor="password" className="field-label">Parol</label>
-                  <div className="relative mt-1.5 flex items-center">
-                    <Lock className="pointer-events-none absolute left-3.5 h-4 w-4 text-gold" />
-                    <input
-                      id="password"
-                      name="password"
-                      type={showPassword ? 'text' : 'password'}
-                      required
-                      placeholder="Kamida 8 ta belgi"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      aria-label="Parol"
-                      className="input-lux has-icon-left has-icon-right h-11 !pl-11 !pr-11 !py-0"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      aria-label={showPassword ? 'Parolni yashirish' : "Parolni ko'rsatish"}
-                      className="absolute right-3.5 flex h-7 w-7 items-center justify-center text-ink-faint transition-colors hover:text-gold-strong focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/50 rounded"
-                    >
-                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Role selector */}
-                <div>
-                  <p className="field-label mb-2">Rolni tanlang</p>
-                  <div className="grid grid-cols-2 gap-2">
-                    {(
-                      [
-                        { value: 'CLIENT', label: 'Mijoz', icon: UserIcon },
-                        { value: 'VENUE_OWNER', label: 'Joy egasi', icon: Shield },
-                      ] as const
-                    ).map(({ value: v, label, icon: Icon }) => (
-                      <button
-                        key={v}
-                        type="button"
-                        onClick={() => setRole(v)}
-                        className={`flex items-center justify-center gap-2 rounded-xl border py-2.5 text-[12px] font-bold transition-all ${
-                          role === v
-                            ? 'border-gold bg-gold-tint text-gold-strong'
-                            : 'border-line bg-surface text-ink-soft hover:border-gold/50'
-                        }`}
-                      >
-                        <Icon className="h-3.5 w-3.5" />
-                        {label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Submit */}
+              {/* Method Selector Tabs */}
+              <div className="mt-6 grid grid-cols-2 gap-1.5 rounded-2xl bg-surface-2 p-1.5 border border-line">
                 <button
-                  type="submit"
-                  disabled={loading}
-                  className="btn-gold mt-2 w-full !py-3 !text-[13px] flex items-center justify-center gap-2"
+                  type="button"
+                  onClick={() => setAuthMethod('telegram')}
+                  className={`relative flex items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-bold transition-all ${
+                    authMethod === 'telegram'
+                      ? 'bg-surface text-ink shadow-sm border border-line-strong'
+                      : 'text-ink-soft hover:text-ink hover:bg-surface/50'
+                  }`}
                 >
-                  {loading ? (
-                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-[#251b0c] border-t-transparent" />
-                  ) : (
-                    <>
-                      <UserPlus className="h-4 w-4 shrink-0" />
-                      <span>Ro&apos;yxatdan o&apos;tish</span>
-                    </>
-                  )}
+                  <Send className="h-3.5 w-3.5 text-[#24A1DE]" />
+                  <span>Telegram</span>
+                  <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-extrabold text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                    Tavsiya
+                  </span>
                 </button>
-              </form>
+
+                <button
+                  type="button"
+                  onClick={() => setAuthMethod('password')}
+                  className={`flex items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-bold transition-all ${
+                    authMethod === 'password'
+                      ? 'bg-surface text-ink shadow-sm border border-line-strong'
+                      : 'text-ink-soft hover:text-ink hover:bg-surface/50'
+                  }`}
+                >
+                  <Lock className="h-3.5 w-3.5 text-gold" />
+                  <span>Telefon & Parol</span>
+                </button>
+              </div>
+
+              {authMethod === 'telegram' ? (
+                <div className="mt-5">
+                  <TelegramAuthWidget defaultRole={role} />
+                </div>
+              ) : (
+                <>
+                  {/* Error */}
+                  <AnimatePresence>
+                    {error && (
+                      <motion.div
+                        className="mt-4 flex items-center gap-2 rounded-xl border border-danger/30 bg-danger/5 px-3 py-2.5 text-[12px] font-semibold text-danger"
+                        initial={{ opacity: 0, y: -6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <AlertCircle className="h-4 w-4 shrink-0" />
+                        <span>{error}</span>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {/* Form */}
+                  <form className="mt-5 space-y-4" onSubmit={handleSubmit}>
+                    {/* Name */}
+                    <div>
+                      <label htmlFor="first-name" className="field-label">Ism</label>
+                      <div className="relative mt-1.5 flex items-center">
+                        <UserIcon className="pointer-events-none absolute left-3.5 h-4 w-4 text-gold" />
+                        <input
+                          id="first-name"
+                          name="firstName"
+                          type="text"
+                          required
+                          placeholder="Ismingiz"
+                          value={firstName}
+                          onChange={handleNameChange}
+                          onKeyDown={handleNameKeyDown}
+                          aria-label="Ism"
+                          className="input-lux has-icon-left h-11 !pl-11 !pr-4 !py-0"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Phone */}
+                    <div>
+                      <label htmlFor="phone-number" className="field-label">Telefon raqam</label>
+                      <div className="relative mt-1.5 flex items-center">
+                        <Phone className="pointer-events-none absolute left-3.5 h-4 w-4 text-gold" />
+                        <input
+                          id="phone-number"
+                          name="phoneNumber"
+                          type="tel"
+                          inputMode="numeric"
+                          required
+                          placeholder="+998 90 123 45 67"
+                          value={phone.value}
+                          onChange={phone.handleChange}
+                          onKeyDown={phone.handleKeyDown}
+                          onFocus={phone.handleFocus}
+                          onClick={phone.handleClick}
+                          aria-label="Telefon raqam"
+                          className="input-lux has-icon-left h-11 !pl-11 !pr-4 !py-0 font-medium"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Password */}
+                    <div>
+                      <label htmlFor="password" className="field-label">Parol</label>
+                      <div className="relative mt-1.5 flex items-center">
+                        <Lock className="pointer-events-none absolute left-3.5 h-4 w-4 text-gold" />
+                        <input
+                          id="password"
+                          name="password"
+                          type={showPassword ? 'text' : 'password'}
+                          required
+                          placeholder="Kamida 8 ta belgi"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          aria-label="Parol"
+                          className="input-lux has-icon-left has-icon-right h-11 !pl-11 !pr-11 !py-0"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          aria-label={showPassword ? 'Parolni yashirish' : "Parolni ko'rsatish"}
+                          className="absolute right-3.5 flex h-7 w-7 items-center justify-center text-ink-faint transition-colors hover:text-gold-strong focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/50 rounded"
+                        >
+                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Role selector */}
+                    <div>
+                      <p className="field-label mb-2">Rolni tanlang</p>
+                      <div className="grid grid-cols-2 gap-2">
+                        {(
+                          [
+                            { value: 'CLIENT', label: 'Mijoz', icon: UserIcon },
+                            { value: 'VENUE_OWNER', label: 'Joy egasi', icon: Shield },
+                          ] as const
+                        ).map(({ value: v, label, icon: Icon }) => (
+                          <button
+                            key={v}
+                            type="button"
+                            onClick={() => setRole(v)}
+                            className={`flex items-center justify-center gap-2 rounded-xl border py-2.5 text-[12px] font-bold transition-all ${
+                              role === v
+                                ? 'border-gold bg-gold-tint text-gold-strong'
+                                : 'border-line bg-surface text-ink-soft hover:border-gold/50'
+                            }`}
+                          >
+                            <Icon className="h-3.5 w-3.5" />
+                            {label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Submit */}
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="btn-gold mt-2 w-full !py-3 !text-[13px] flex items-center justify-center gap-2"
+                    >
+                      {loading ? (
+                        <span className="h-4 w-4 animate-spin rounded-full border-2 border-[#251b0c] border-t-transparent" />
+                      ) : (
+                        <>
+                          <UserPlus className="h-4 w-4 shrink-0" />
+                          <span>Ro&apos;yxatdan o&apos;tish</span>
+                        </>
+                      )}
+                    </button>
+                  </form>
+                </>
+              )}
 
               {/* Switch link */}
               <div className="mt-5 border-t border-dashed border-line pt-4 text-center text-[12px] font-semibold text-ink-soft">
